@@ -1,0 +1,6 @@
+*.map
+*.obj
+*.mhx
+*.abs
+*.swp
+.deps/*
