@@ -38,7 +38,7 @@
 
 void main(void)
 {
-    unsigned char error = 0;
+	unsigned char error = 0;
 	unsigned char global_error = 0;	
 	unsigned int i;
 	
@@ -46,12 +46,12 @@ void main(void)
 	CSCFG_MONCKI = 1;
 	CMCFG = 0x0D;
 		
-    __EI();                    /* enable interrupts */
-    __set_il(31);              /* allow all levels */
-    InitIrqLevels();           /* init interrupts */
+	__EI();                    /* enable interrupts */
+	__set_il(31);              /* allow all levels */
+	InitIrqLevels();           /* init interrupts */
 
-    PORTEN = 0x3;              /* enable I/O Ports */
-                               /* This feature is not supported by MB91V460A */
+	PORTEN = 0x3;		/* enable I/O Ports */
+				/* This feature is not supported by MB91V460A */
                                /* For all other devices the I/O Ports must be enabled*/
 
 	/*	Enable LEDs	*/
