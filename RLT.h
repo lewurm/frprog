@@ -30,7 +30,7 @@
 
 void RLT_InitializeTimer(unsigned char channel, unsigned char runmode, unsigned char clockmode, unsigned char triggermode, unsigned char outputmode);
 void RLT_SetReloadValue(unsigned char channel, unsigned short int value);
-void RLT_EnableInterrupt(unsigned char channel);
+void RLT_EnableInterrupt(unsigned char channel, unsigned char enable);
 void RLT_TriggerTimer(unsigned char channel);
 
 __interrupt void RLT_Channel0_ISR();

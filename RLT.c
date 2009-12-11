@@ -154,7 +154,7 @@ void RLT_TriggerTimer(unsigned char channel)
 	}
 }
 
-void RLT_EnableInterrupt(unsigned char channel)
+void RLT_EnableInterrupt(unsigned char channel, unsigned char enable)
 {
 	switch(channel)
 	{
@@ -164,7 +164,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR0_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR0_INTE = 1;
+			TMCSR0_INTE = enable;
 			break;
 		}	
 		case 1:
@@ -173,7 +173,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR1_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR1_INTE = 1;
+			TMCSR1_INTE = enable;
 			break;
 		}	
 		case 2:
@@ -182,7 +182,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR2_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR2_INTE = 1;
+			TMCSR2_INTE = enable;
 			break;
 		}	
 		case 3:
@@ -191,7 +191,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR3_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR3_INTE = 1;
+			TMCSR3_INTE = enable;
 			break;
 		}	
 		case 4:
@@ -200,7 +200,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR4_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR4_INTE = 1;
+			TMCSR4_INTE = enable;
 			break;
 		}	
 		case 5:
@@ -209,7 +209,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR5_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR5_INTE = 1;
+			TMCSR5_INTE = enable;
 			break;
 		}	
 		case 6:
@@ -218,7 +218,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR6_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR6_INTE = 1;
+			TMCSR6_INTE = enable;
 			break;
 		}	
 		case 7:
@@ -227,7 +227,7 @@ void RLT_EnableInterrupt(unsigned char channel)
 			TMCSR7_UF = 0;
 			
 			/* Enable Interrupt	*/
-			TMCSR7_INTE = 1;
+			TMCSR7_INTE = enable;
 			break;
 		}
 	}
@@ -239,7 +239,7 @@ __interrupt void RLT_Channel0_ISR()
 	TMCSR0_UF = 0;
 	
 	/*	Do what you have to do	*/
-	PDR14++;
+	PDR14--; //since the pins are low active
 }
 
 __interrupt void RLT_Channel1_ISR()

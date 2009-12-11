@@ -56,14 +56,14 @@ void main(void)
 
 	/*	Enable LEDs	*/
 	DDR14 = 0xFF;
-	PDR14 = 0x00;
+	PDR14 = 0xff;
 
 	/*	Initialize Reload Timer Channel 0	*/
 	RLT_InitializeTimer(0, RLT_RUMMODE_RELOAD, RLT_CLOCKMODE_DIV32, RLT_TRIGGER_SOFTWARE, RLT_OUTOUTMODE_HIGHLEVEL);
-	RLT_SetReloadValue(0,0x1388);	// CLKP/32, 0.01s Interval => 0x1388 counts
-	RLT_EnableInterrupt(0);
+	RLT_SetReloadValue(0,0xfffe);
 	RLT_TriggerTimer(0);
-		 
+	RLT_EnableInterrupt(0, 1);
+
 	/*	Initialize UART4	*/
 	InitUart4();
 
@@ -179,6 +179,8 @@ void main(void)
 	{
 		Puts4("\n********* FLASH Programming Demo done **********\n");
 	}
+
+	RLT_EnableInterrupt(0, 0);
 					
     while(1)                   /* endless loop */
     {    
