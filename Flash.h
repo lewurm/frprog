@@ -8,7 +8,7 @@
 #ifndef __FLASH_H__
 #define __FLASH_H__
 
-#include "MB91465K.H"
+#include "MB91465KH.H"
 
 #define hseq_1 ((volatile unsigned short int *)0x000A1557)
 #define hseq_2 ((volatile unsigned short int *)0x000A0AAF)

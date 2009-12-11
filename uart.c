@@ -4,7 +4,7 @@
 /*                 (C) Fujitsu Microelectronics Europe GmbH                  */
 /*---------------------------------------------------------------------------*/
 
-#include "mb91465k.h"
+#include "mb91465kH.h"
 
 const char ASCII[] = "0123456789ABCDEF";
 

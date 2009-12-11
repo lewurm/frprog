@@ -6,7 +6,7 @@
 /*****************************************************************************/
 
 #include "Flash.h"
-#include "mb91465k.h"
+#include "mb91465kH.h"
 
 static unsigned int IFlag;
 
