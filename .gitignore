@@ -4,3 +4,5 @@
 *.abs
 *.swp
 .deps/*
+cscope.out
+tags
