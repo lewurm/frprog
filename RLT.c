@@ -239,7 +239,7 @@ __interrupt void RLT_Channel0_ISR()
 	TMCSR0_UF = 0;
 	
 	/*	Do what you have to do	*/
-	PDR27++;
+	PDR14++;
 }
 
 __interrupt void RLT_Channel1_ISR()

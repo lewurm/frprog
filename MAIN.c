@@ -55,8 +55,8 @@ void main(void)
                                /* For all other devices the I/O Ports must be enabled*/
 
 	/*	Enable LEDs	*/
-	DDR27 = 0xFF;
-	PDR27 = 0x00;
+	DDR14 = 0xFF;
+	PDR14 = 0x00;
 
 	/*	Initialize Reload Timer Channel 0	*/
 	RLT_InitializeTimer(0, RLT_RUMMODE_RELOAD, RLT_CLOCKMODE_DIV32, RLT_TRIGGER_SOFTWARE, RLT_OUTOUTMODE_HIGHLEVEL);
