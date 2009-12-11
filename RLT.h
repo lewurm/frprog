@@ -8,7 +8,7 @@
 #ifndef __RLT_H__
 #define __RLT_H__
 
-#include "MB91465K.h"
+#include "mb91465k.h"
 
 #define RLT_RUNMODE_ONESHOT	0x00
 #define RLT_RUMMODE_RELOAD	0x01
