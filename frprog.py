@@ -6,7 +6,7 @@ from SerialPort_linux import *
 last_checksum = 0
 
 def sendByte(byte):
-	time.sleep(0.01) # just to get sure, wait 10ms
+	time.sleep(0.001) # just to get sure, wait 1ms
 	tty.write(chr(byte))
 	tty.flush()
 
@@ -99,18 +99,32 @@ while 1:
 print "OK, trying to set baudrate..."
 
 # set baudrate
-cmdBAUDRATE(19200)
-tty = SerialPort("/dev/ttyUSB0", 100, 19200)
-
+cmdBAUDRATE(38400)
+tty = SerialPort("/dev/ttyUSB0", 100, 38400)
+"""
 print
+sendByte(0x01)
+print recvByte()
+sendByte(0x02)
+print recvByte()
+sys.exit(0)
+"""
+
 
 # write something to the begin of the IRAM
-data = [255, 2, 3, 4]
-print "Writing", data, "to the IRAM..."
-cmdWRITE(0x00030000, 4, data)
+data_wr = []
+checksum = 0
+for i in range(0, 0x400):
+	value = i%256
+	data_wr.append(value)
+	checksum = (checksum + value) % (2**16)
+
+print "Calculated checksum:", checksum
+print "Writing", data_wr, "to the IRAM..."
+cmdWRITE(0x00030000, len(data_wr), data_wr)
 print "Received Checksum:", last_checksum
 print
 
 print "Reading from the IRAM again..."
-data2 = cmdREAD(0x00030000, 4)
-print "Received data:", data2, "Checksum:", last_checksum
+data_re = cmdREAD(0x00030000, len(data_wr))
+print "Received data:", data_re, "Checksum:", last_checksum
