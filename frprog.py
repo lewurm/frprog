@@ -32,7 +32,6 @@ def recvByte():
 
 def recvChecksum():
 	global last_checksum
-	# get checksum
 	last_checksum = recvByte()
 	last_checksum |= (recvByte() << 8)
 
@@ -69,6 +68,32 @@ def cmdWRITE(address, size, data):
 	# write binary stream of data
 	for i in range(0, size):
 		sendByte(data[i])
+	# get checksum
+	recvChecksum()
+
+# TODO: test this function!
+def cmdCALL(address):
+	# send CALL command
+	sendByte(0x01)
+	if (recvByte() != 0xF1):
+		raise Exception
+	sendByte(0x04)
+	if (recvByte() != 0x84):
+		raise Exception
+	# tell desired address
+	sendDWord(address)
+	# wait for return parameter - not needed here!
+	#return recvByte()
+
+# TODO: test this function!
+def cmdCHECKSUM():
+	# call CHECKSUM command
+	sendByte(0x01)
+	if (recvByte() != 0xF1):
+		raise Exception
+	sendByte(0x05)
+	if (recvByte() != 0x84):
+		raise Exception
 	# get checksum
 	recvChecksum()
 
