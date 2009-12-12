@@ -142,6 +142,18 @@ print recvByte()
 sys.exit(0)
 """
 
+#cmdCALL(0x00030000)
+cmdCALL(0x00033ffc)
+sys.exit(0)
+
+# read something from the IRAM
+#print cmdREAD(0x00030000, 32)
+
+#data = []
+#for i in range(0, 32):
+#	data.append(i)
+#cmdWRITE(0x00030000, 32, data)
+
 
 # write something to the begin of the IRAM
 data_wr = []
