@@ -2,6 +2,13 @@
 import sys, time
 from SerialPort_linux import *
 
+# serial device to communicate with
+DEVICE="/dev/ttyUSB0"
+# baudrate used for initialization
+INIT_BAUDRATE=9600
+# baudrate used for communication after init
+REAL_BAUDRATE=38400
+
 # contains the last received checksum from a READ, WRITE or CHECKSUM command
 last_checksum = 0
 
@@ -82,7 +89,7 @@ def cmdBAUDRATE(baudrate):
 	sendByte((baudrate >> 24) & 0xFF)
 
 print "Initializing serial port..."
-tty = SerialPort("/dev/ttyUSB0", 100, 9600)
+tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
 
 print "Please press RESET on your 1337 board..."
 
@@ -99,8 +106,8 @@ while 1:
 print "OK, trying to set baudrate..."
 
 # set baudrate
-cmdBAUDRATE(38400)
-tty = SerialPort("/dev/ttyUSB0", 100, 38400)
+cmdBAUDRATE(REAL_BAUDRATE)
+tty = SerialPort(DEVICE, 100, REAL_BAUDRATE)
 """
 print
 sendByte(0x01)
