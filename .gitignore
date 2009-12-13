@@ -6,3 +6,4 @@
 .deps/*
 cscope.out
 tags
+*.pyc
