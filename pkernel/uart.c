@@ -12,8 +12,8 @@ void InitUart4(void)
 {
   // Initialize UART asynchronous mode
   // BGR04 = 1666; //  9600 Baud @ 16MHz
-     BGR04 = 832;  // 19200 Baud @ 16MHz
-  // BGR04 = 416;  // 38400 Baud @ 16MHz
+  // BGR04 = 832;  // 19200 Baud @ 16MHz
+  BGR04 = 416;  // 38400 Baud @ 16MHz
 
   // BGR04 = 2083; //  9600 Baud @ 20MHz
   // BGR04 = 1041; // 19200 Baud @ 20MHz
@@ -29,13 +29,13 @@ void InitUart4(void)
   EPFR19 = 0x00;   // enable UART
 }
 
-void Putch4(char ch)         /* sends a char */
+void Putch4(unsigned char ch)         /* sends a char */
 {
   while (SSR04_TDRE == 0);    /* wait for transmit buffer empty 	*/
   TDR04 = ch;                 /* put ch into buffer			*/
 }
 
-char Getch4(void)            /* waits for and returns incomming char 	*/
+unsigned char Getch4(void)            /* waits for and returns incomming char 	*/
 {
   volatile unsigned ch;
 
@@ -124,6 +124,4 @@ void Putdec4(unsigned long x, int digits)
     
 	Puts4(buf);					/* send string */
 }
-
-
 

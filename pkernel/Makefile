@@ -45,7 +45,7 @@ CONVFLAGS = -cwno -Xdof
 
 DEFINES =
 
-TNAME = fuj
+TNAME = pkernel
 TARGET_MHX = $(TNAME).mhx
 TARGET = $(TNAME).abs
 DEPDIR = .deps
