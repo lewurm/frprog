@@ -118,6 +118,7 @@ class FlashSequence(object):
 		self.address = address
 		self.data = data
 
+# list of all our address/data pairs to flash
 flashseqs = []
 
 # check command line arguments
@@ -164,6 +165,7 @@ print "The following flash sequences have been read in:"
 for seq in flashseqs:
 	print hex(seq.address) + ":", seq.data
 
+
 print "Initializing serial port..."
 tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
 
@@ -184,7 +186,14 @@ print "OK, trying to set baudrate..."
 cmdBAUDRATE(REAL_BAUDRATE)
 tty = SerialPort(DEVICE, 100, REAL_BAUDRATE)
 
+# let the fun begin!
+for seq in flashseqs:
+	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
+	cmdWRITE(seq.address, len(seq.data), seq.data)
+sys.exit(0)
 
+
+# some tests here.......
 """
 # execute (existing) program in ram
 cmdCALL(0x00033ffc)
