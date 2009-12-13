@@ -188,8 +188,12 @@ tty = SerialPort(DEVICE, 100, REAL_BAUDRATE)
 
 # let the fun begin!
 for seq in flashseqs:
-	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
-	cmdWRITE(seq.address, len(seq.data), seq.data)
+	if(seq.address >= 0x148000):
+		continue
+	print "RAMing", len(seq.data), "bytes at address", hex(seq.address)
+	cmdWRITE(seq.address - flashseqs[0].address + 0x30000, len(seq.data), seq.data)
+
+cmdCALL(0x30000);
 sys.exit(0)
 
 
@@ -271,7 +275,7 @@ print "Received Checksum:", last_checksum
 print
 """
 
-
+"""
 # write some data in the iram and try to execute it
 data_wr =[
 		0x9B,0x00,
@@ -295,3 +299,4 @@ cmdWRITE(0x00030000, len(data_wr), data_wr)
 print "Received Checksum:", last_checksum
 print
 cmdCALL(0x00030000)
+"""
