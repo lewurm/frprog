@@ -7,6 +7,7 @@
 
 #include "rlt.h"
 
+#pragma section CODE=IRAM,attr=CODE
 void RLT_InitializeTimer(unsigned char channel, unsigned char runmode, unsigned char clockmode, unsigned char triggermode, unsigned char outputmode)
 {
 	unsigned short setvalue = 0x00;

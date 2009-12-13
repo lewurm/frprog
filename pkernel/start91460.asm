@@ -1577,6 +1577,7 @@ _wait64_loop:
 #endm
         .section        CODE, code, align=4
         .section        CODE_START, code, align=4
+#pragma section CODE=IRAM,attr=CODE
 
 
 ;=========================================================================================

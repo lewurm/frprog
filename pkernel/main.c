@@ -3,12 +3,13 @@
 #include "rlt.h"
 #include "flash.h"
 
+#pragma section CODE=IRAM,attr=CODE
 void main(void)
 {
 	unsigned char error = 0;
 	unsigned char global_error = 0;	
 	unsigned int i, baseaddr;
-	unsigned int toflash[] = {0x9b00,
+	unsigned int toflash2[] = {0x9b00,
 								0x0d4e,
 								0xcff1,
 								0x1601,
@@ -17,6 +18,7 @@ void main(void)
 								0xc106,
 								0x1656,
 								0xe0fb}; //len = 9
+	unsigned int toflash[] = {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}; //len = 9
 	
 	/*	Enable Clock Monitor	*/
 	CSCFG_MONCKI = 1;
@@ -65,7 +67,7 @@ void main(void)
 		i++;
 		if( (i % 0x10) == 0 ) Puts4("\n");
 	}
- 	Puts4("\n");
+	Puts4("\n");
 
 
 	i = 0;
@@ -73,7 +75,7 @@ void main(void)
 	for(; i<9; i++) {
 		Puts4("\nwrite: ");
 		error = FLASH_WriteHalfWord(baseaddr + (2*i), toflash[i]);
-	 	Puts4(error == 1 ? "[sucess] " : "[failed] ");
+		Puts4(error == 1 ? "[sucess] " : "[failed] ");
 		Puts4("0x");
 		Puthex4(toflash[i], 4);
 		Puts4(" @0x");
@@ -88,8 +90,28 @@ void main(void)
 		i++;
 		if( (i % 0x10) == 0 ) Puts4("\n");
 	}
- 	Puts4("\n");
+	Puts4("\n================================================================\n");
 
+	i = 0;
+	baseaddr = 0xf4000;
+	for(; i<9; i++) {
+		Puts4("\nwrite: ");
+		error = FLASH_WriteHalfWord(baseaddr + (2*i), toflash2[i]);
+		Puts4(error == 1 ? "[sucess] " : "[failed] ");
+		Puts4("0x");
+		Puthex4(toflash2[i], 4);
+		Puts4(" @0x");
+		Puthex4(baseaddr + (2*i), 6);
+	}
+
+	i=0;
+	Puts4("\nCurrent Content of FLASH at 0xf4000 ... 0xf401F:\n");
+	while(i < 0x20)
+	{
+		Puts4("0x"); Puthex4( *(unsigned char *)(0xf4000 + i), 2); Puts4(" ");
+		i++;
+		if( (i % 0x10) == 0 ) Puts4("\n");
+	}
 	 	 		
 	/*	Output Ready Meassage	*/
 	if( global_error != 0 )

@@ -18,6 +18,7 @@
 #include "mb91465k.h"
 #include "rlt.h"
 
+#pragma section CODE=IRAM,attr=CODE
 /*------------------------------------------------------------------------
   InitIrqLevels()
 
