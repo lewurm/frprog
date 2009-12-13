@@ -4,6 +4,7 @@
 *.abs
 *.swp
 .deps/*
+pkernel/.deps/*
 cscope.out
 tags
 *.pyc
