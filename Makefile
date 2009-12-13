@@ -52,7 +52,7 @@ DEPDIR = .deps
 
 #add all objects here
 
-OBJS = vectors.obj Start91460.obj mb91465k.obj MAIN.obj RLT.obj uart.obj Flash.obj 
+OBJS = vectors.obj start91460.obj mb91465k.obj main.obj rlt.obj uart.obj flash.obj 
 
 AS = $(PREFIX)fasm911s
 CC = $(PREFIX)fcc911s

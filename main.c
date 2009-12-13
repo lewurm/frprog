@@ -14,8 +14,8 @@
 /*************************@INCLUDE_START************************/
 #include "mb91465k.h"
 #include "vectors.h"
-#include "RLT.h"
-#include "Flash.h"
+#include "rlt.h"
+#include "flash.h"
 /**************************@INCLUDE_END*************************/
 
 /*********************@GLOBAL_VARIABLES_START*******************/

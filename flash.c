@@ -5,7 +5,7 @@
 /*                 (C) Fujitsu Microelectronics Europe GmbH                  */
 /*****************************************************************************/
 
-#include "Flash.h"
+#include "flash.h"
 #include "mb91465k.h"
 
 static unsigned int IFlag;

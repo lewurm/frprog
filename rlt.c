@@ -5,7 +5,7 @@
 /*                 (C) Fujitsu Microelectronics Europe GmbH                  */
 /*****************************************************************************/
 
-#include "RLT.h"
+#include "rlt.h"
 
 void RLT_InitializeTimer(unsigned char channel, unsigned char runmode, unsigned char clockmode, unsigned char triggermode, unsigned char outputmode)
 {
