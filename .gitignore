@@ -1,1 +1,9 @@
+*.map
+*.obj
+*.mhx
+*.abs
+*.swp
+.deps/*
+cscope.out
+tags
 *.pyc
