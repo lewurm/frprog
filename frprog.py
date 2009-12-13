@@ -141,10 +141,11 @@ sendByte(0x02)
 print recvByte()
 sys.exit(0)
 """
-
-#cmdCALL(0x00030000)
+"""
+# execute (existing) program in ram
 cmdCALL(0x00033ffc)
 sys.exit(0)
+"""
 
 # read something from the IRAM
 #print cmdREAD(0x00030000, 32)
@@ -155,6 +156,7 @@ sys.exit(0)
 #cmdWRITE(0x00030000, 32, data)
 
 
+"""
 # write something to the begin of the IRAM
 data_wr = []
 checksum = 0
@@ -172,3 +174,69 @@ print
 print "Reading from the IRAM again..."
 data_re = cmdREAD(0x00030000, len(data_wr))
 print "Received data:", data_re, "Checksum:", last_checksum
+"""
+
+"""
+# see whats in the iram at the moment
+data_wr = []
+print "Reading from the IRAM..."
+data_re = cmdREAD(0x00030000, 0x10000-4)
+print "Received data:", data_re, "Checksum:", last_checksum
+"""
+
+"""
+# see whats in the dram at the moment
+data_wr = []
+print "Reading from the DRAM..."
+data_re = cmdREAD(0x0002C000, 0x10000-0xC000-4)
+print "Received data:", data_re, "Checksum:", last_checksum
+"""
+
+"""
+# blank the iram
+data_wr = []
+for i in range(0, 0x10000-4):
+	value = 0
+	data_wr.append(value)
+
+print "Writing", data_wr, "to the IRAM..."
+cmdWRITE(0x00030000, len(data_wr), data_wr)
+print "Received Checksum:", last_checksum
+print
+"""
+
+"""
+# blank the dram
+data_wr = []
+for i in range(0, 0x10000-0xC000-4):
+	value = 0
+	data_wr.append(value)
+
+print "Writing", data_wr, "to the DRAM..."
+cmdWRITE(0x0002C000, len(data_wr), data_wr)
+print "Received Checksum:", last_checksum
+print
+"""
+
+
+"""
+S006000066756AB4
+S20E0F40009B000D4ECFF11601E0FFF6
+S214148000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF67
+S804000000FB
+
+NOP = 0x9fa0
+"""
+# write some data in the iram and try to execute it
+# ATTENTION: before running this, run a program on the board (e.g. flashdemo).
+# the bytecode will be executed after copied into iram, however it won't stop
+# and executes the stuff after it in the iram. after a powerreset this can be
+# randomcrap and this could be very dangerous! so pay attention please
+data_wr =[0x9B,0x00,0x0D,0x4e,0xcf,0xf1,0x16,0x01,0xe0,0xff,0xf6,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0xe0,
+		0xcb,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,
+		0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0,0x9f,0xa0]
+print "Writing", data_wr, "to the IRAM..."
+cmdWRITE(0x00030000, len(data_wr), data_wr)
+print "Received Checksum:", last_checksum
+print
+cmdCALL(0x00030000)
