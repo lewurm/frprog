@@ -71,6 +71,15 @@ void main(void)
 		cleardata();
 		increaseled();
 		switch(recvbyte()) {
+			case 0x15: //chip erase
+				Putch4(0x45);
+				increaseled();
+				if(FLASH_ChipErase() != 1) {
+					panic();
+				}
+				Putch4(0x23);
+				break;
+
 			case 0x12: //erase
 				Putch4(0x11);
 				address = recvdword();

@@ -63,6 +63,53 @@ void FLASH_PrepareReadMode()
 	FMWT_WTC = 4;
 }		
 		
+unsigned char FLASH_ChipErase(void)
+{
+	unsigned char flag = 0;
+
+	/*Disable Interrupts if necessary*/
+	IFlag = FLASH_SaveDisableInterruptFlag();
+
+	/*Set FLASH access mode to 16Bit Write Mode*/
+	FLASH_PrepareWriteHalfWordMode();
+
+	/*Start FLASH Sector Erase Sequence*/
+	*hseq_1 = 0x00AA;
+	*hseq_2 = 0x0055;
+	*hseq_1 = 0x0080;
+	*hseq_1 = 0x00AA;
+	*hseq_2 = 0x0055;
+	*hseq_1 = 0x0010;
+
+	/*Wait for the Auto Algorithm to finish*/
+	while( flag == 0 ) {
+		/* Feed Hardware Watchdog */
+		HWWD_CL = 0;
+
+		if(*hseq_1 & DPOLL) {
+			flag = 1;
+		}
+		if(*hseq_1 & TLOVER) {
+			if(*hseq_1 & DPOLL) {
+				flag = 1;
+			}
+			else {
+				/*Reset FLASH (keep in mind 16Bit access to FLASH)*/
+				*hseq_1 = 0x00F0; // Keep in Mind (16Bit access)
+
+				flag = 2;
+			}
+		}
+	}
+
+	/*Set FLASH access mode to 32Bit Read Mode*/
+	FLASH_PrepareReadMode();
+
+	/*Restore the original Interrupt Flag*/
+	FLASH_RestoreInterruptFlag(IFlag);
+
+	return flag;
+}
 	
 unsigned char FLASH_SectorErase(unsigned int secadr)
 {

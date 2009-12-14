@@ -29,6 +29,15 @@ def sendDWord(dword):
 	sendByte((dword >> 16) & 0xFF)
 	sendByte((dword >> 24) & 0xFF)
 
+def pkernCHIPERASE():
+	sendByte(0x15)
+	if (recvByte() != 0x45):
+		raise Exception
+	print "wait..."
+	if (recvByte() != 0x23):
+		raise Exception
+	print "Chip erasing done."
+
 def pkernERASE(address, size):
 	sendByte(0x12)
 	if (recvByte() != 0x11):
@@ -125,9 +134,14 @@ for seq in flashseqs:
 
 
 # let the fun begin!
+"""
 for seq in flashseqs:
 	print "Erasing", len(seq.data), "bytes at address", hex(seq.address)
 	pkernERASE(seq.address, len(seq.data))
+"""
+print "ChipErase..."
+pkernCHIPERASE()
+
 
 for seq in flashseqs:
 	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
