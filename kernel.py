@@ -5,7 +5,7 @@ from SerialPort_linux import *
 # serial device to communicate with
 DEVICE="/dev/ttyUSB0"
 # baudrate used for communication with pkernel
-KERNEL_BAUDRATE=38400
+KERNEL_BAUDRATE=115200
 
 def recvByte():
 	i = tty.read()

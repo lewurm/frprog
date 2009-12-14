@@ -55,8 +55,6 @@ void main(void)
 	unsigned short i, size, next;
 	unsigned char running = 1, data[BUFSIZE] = {0};
 	
-	PORTEN = 0x3; /* enable I/O Ports */
-
 	/*Enable LEDs*/
 	DDR14 = 0xFF;
 	PDR14 = 0xff;
