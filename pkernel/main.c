@@ -27,7 +27,7 @@ void main(void)
 #if 1
 	i = 0;
 	baseaddr = 0xf4000;
-	for (; i <0x30; i+=4) {
+	for (; i <0x10; i+=4) {
 		(void) FLASH_SectorErase(baseaddr + i);
 		increaseled();
 	}
@@ -42,8 +42,12 @@ void main(void)
 
 	PDR14 = 0x55; //signal that we finished now!
 
+#if 1
 	while(1) {
 		HWWD_CL = 0;
 	}
+#else
+	//let restart it
+#endif
 }
 

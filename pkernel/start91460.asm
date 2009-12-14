@@ -27,8 +27,6 @@
 ;
 ;
 #set    DEVICE          MB91465K                ; <<< select device
-;
-#set    BOOT_FLASH_SEC  OFF                     ; <<< BOOT and Flash Security Vector    
 ;=========================================================================================
 ; 4.3  Stack Type and Stack Size
 ;=========================================================================================
@@ -217,23 +215,12 @@
         .section        DATA,  data,  align=4
         .section        INIT,  data,  align=4
         .section        IRAM,  code,  align=4
-        .section        CONST, const, align=4
-        .section        INTVECT, const, align=4 
         
 #if I_RAM 
         .import _RAM_IRAM
         .import _ROM_IRAM
 #endif
                     
-#if (BOOT_FLASH_SEC == OFF)        
-        .data.w 0xFFFFFFFF
-        .data.w 0xFFFFFFFF
-        .data.w 0xFFFFFFFF
-        .data.w 0xFFFFFFFF       
-#else
-        .res.w          4
-#endif         
-   
 ;-----------------------------------------------------------------------------------------
 ; MACRO Clear RC Watchdog
 ;-----------------------------------------------------------------------------------------
@@ -241,20 +228,9 @@
         LDI             #0x4C7,R7               ; clear RC watchdog
         BANDL           #0x7,@R7
 #endm
-;-----------------------------------------------------------------------------------------
-; MACRO WAIT_LOOP
-;-----------------------------------------------------------------------------------------
-#macro wait_loop loop_number
-#local _wait64_loop
-        LDI             #loop_number, R0
-_wait64_loop:
-        ADD             #-1, R0
-        BNE             _wait64_loop
-#endm
         .section        CODE, code, align=4
         .section        CODE_START, code, align=4
 #pragma section CODE=IRAM,attr=CODE
-
 
 ;=========================================================================================
 ; 7.  S T A R T 
@@ -284,7 +260,6 @@ startnop:
         LDI             #__userstack_top, SP    ; initialize SP
 #endif
 
-        LDI             #INTVECT, R0            ; set Table Base
 smd_tbr: 
         MOV             R0, TBR         
 
