@@ -1,180 +1,6 @@
-/*      THIS SAMPLE CODE IS PROVIDED AS IS AND IS SUBJECT TO ALTERATIONS. FUJITSU       */
-/*      MICROELECTRONICS ACCEPTS NO RESPONSIBILITY OR LIABILITY FOR ANY ERRORS OR       */
-/*      ELIGIBILITY FOR ANY PURPOSES.                                                   */
-/*      (C) Fujitsu Microelectronics Europe GmbH                                        */
-;=========================================================================================
-; 1  Contents
-;=========================================================================================
-; 1       Contents
-; 2       Disclaimer
-;
-; 3       History
-;
-; 4       Settings
-; 4.1     Controller device
-; 4.2     Boot / flash security 
-; 4.3     Stack type and stack size
-; 4.4     Copy code from flash to I-RAM
-; 4.5     C++ start-up 
-; 4.6     Low-level library interface
-; 4.7     Clock Configuration
-; 4.7.1   Clock selection
-; 4.7.2   Select Clock Modulator
-; 4.8     External bus interface
-; 4.8.1   Select chipselect 
-; 4.8.2   Set memory addressing for chipselects
-; 4.8.3   Configure chipselect area
-; 4.8.4   Set wait cycles for chipselects
-; 4.8.5   Configure chipselects SDRAM memory only 
-; 4.8.6   Referesh control register RCR 
-; 4.8.7   Terminal and timing control register
-; 4.8.8   Enable / disable I-cache
-; 4.8.9   Enable CACHE for chipselect
-; 4.8.10  Select external bus mode (data lines)
-; 4.8.11  Select external bus mode (address lines)
-; 4.8.12  Select external bus mode (control signals)
-;
-; 5       Definitions of Configurations
-;
-; 6       Section and data declaration
-; 6.1     Define stack size
-; 6.2     Define sections
-;
-; 7.      S T A R T 
-; 7.1     Initialise stack pointer and table base register
-; 7.2     Check for CSV reset and set CSV
-; 7.3     Check clock condition
-; 7.4     Restore default settings after reset
-; 7.4.1   Disable clock modulator
-; 7.4.2   Check if running on sub clock, change to main clock
-; 7.4.3   Disable sub clock
-; 7.4.4   Check if running on PLL, gear down PLL
-; 7.4.5   Disable PLL
-; 7.4.6   Set to main clock
-; 7.5     Set memory controller
-; 7.6     Clock startup
-; 7.6.1   Set Voltage Regulator Settings
-; 7.6.2   Power on clock modulator - clock modulator part I
-; 7.6.3   Set CLKR register w/o clock mode
-; 7.6.4   Start PLLs 
-; 7.6.5   Wait for PLL oscillation stabilisation
-; 7.6.6   Set clocks 
-; 7.6.6.1 Set CPU and peripheral clock
-; 7.6.6.2 Set external bus interface clock
-; 7.6.6.3 Set CAN clock prescaler
-; 7.6.6.4 Switch main clock mode
-; 7.6.6.5 Switch sub clock mode
-; 7.6.6.6 Switch to PLL mode
-; 7.6.7   Enable frequncy modulation - clock modulator part II
-; 7.7     Set BusInterface
-; 7.7.1   Disable all CS
-; 7.7.2   Clear TCR register
-; 7.7.3   Set CS0 
-; 7.7.4   Set CS1 
-; 7.7.5   Set CS2  
-; 7.7.6   Set CS3
-; 7.7.7   Set CS4
-; 7.7.8   Set CS5 
-; 7.7.9   Set CS6
-; 7.7.10  Set CS7  
-; 7.7.11  Set special SDRAM config register  
-; 7.7.12  set Port function register
-; 7.7.13  Set TCR register
-; 7.7.14  Enable cache for selected CS
-; 7.7.15  Set SDRAM referesh control register
-; 7.7.16  Enable used CS
-; 7.7.17  I-cache on/off
-; 7.7.18  Set port function register to general as I/O-port
-; 7.8     Copy code from flash to I-RAM
-; 7.9     Fill stacks
-; 7.10    Clear data 
-; 7.11    Copy Init section from ROM to RAM
-; 7.12    C library initialization
-; 7.13    Call C++ constructors
-; 7.14    Call main routine
-; 7.15    Return from main function
-;
-;=========================================================================================
-; 2  Disclaimer
-;=========================================================================================
-;                    Fujitsu Microelectronics Europe GmbH                       
-;                http://emea.fujitsu.com/microelectronics 
-;                                                              
-;    The  following  software  is for  demonstration  purposes only. It  is not fully  
-;    tested, nor  validated  in order to fullfill its task under  all  circumstances.  
-;    Therefore,  this software or  any part of it must only  be used in an evaluation 
-;    laboratory environment.                        
-;    This  software  is  subject to  the  rules of  our  standard DISCLAIMER, that is
-;    delivered with our  SW-tools on  the  Fujitsu  Microcontrollers  CD/DVD (V3.4 or 
-;    higher "\START.HTM") or on our Internet Pages:                                   
-;    http://www.fme.gsdc.de/gsdc.htm
-;    http://emea.fujitsu.com/microelectronics 
-;
-;=========================================================================================
-; 3  History
-;=========================================================================================
-;
-;=========================================================================================
-;       MB914xx (FR60 CORE ONLY) Series C Compiler's 
-;
-;       Startup file for memory and basic controller initialisation
-;=========================================================================================
-;History:
-;
-; 2005-04-18 V1.0 UMa  Release first version
-; 2005-06-17 V1.1 UMa  Added bus interface, modified c++ startup
-; 2005-06-28 V1.2 UMa  minor changes
-; 2005-07-27 V1.3 UMa  default values changed
-; 2005-10-04 V1.4 UMa  changed code 'Call main Routine'
-;                      Added secutiy section for MB91F467D  
-;                      Added Flash Access Read Timing setting section;
-; 2005-10-04 V1.5 UMa  Added Flash Controller Section
-; 2005-10-28 V1.6 UMa  Check for CSV reset
-; 2005-11.16 V1.7 UMa  Monitor Debugger support added: Copy of intvect Table
-;                      Ext. Int 0 as abort function
-;                      Changed PLL-Startup, Reset HWWD added
-; 2005-11-16 V1.7 UMa  Examples for MUL_G changed
-; 2006-02-14 V1.8 UMa  mb91464a added
-;                      Settings for Clock Spervisor added
-;                      Name of Section SECURITY changed to SECURITY_VECTORS
-;                      Example values for gear-up changed
-; 2006-03-17 V1.9 UMa  Changed Startup for Monitor Debugger
-; 2006-04-24 v2.0 UMa  Added MB91465K and MB91469G
-; 2006-05-03 v2.1 UMa  Added MB91461R; removed MB91V460A
-;                      Added settings for the external bus-interface
-; 2006-07-28 v2.2 UMa  Added I-RAM copy function (ROM -> IRAM)
-;                      Added default settings for FLASH Access Read Timing 
-;                      Settings 
-;                      Changed default settings for FLASH cache configuration 
-;                      Register
-;                      Changed check for clock startup
-; 2006-08-16 v2.3 MVo  Corrected Boot Security Sector Addresses for MB91469G
-; 2006-10-06 v2.4 UMa  Added new devices
-;                      Corrected typo in I_RAM to flash copy function
-;                      Changed default settings for flash cache configuration
-;                      Changed comments for SDRAM bus interface configuration
-;                      Changed comments and default setting of CAN Prescaler
-;                      Added Stack filler
-;                      Added Settings for REGSEL Register
-; 2007-02-13 v2.5 UMa  Introduction of default configurations
-;                      Changed I_RAM to flash copy function                    
-;
-;
-;=========================================================================================
-; 4  Settings
-;=========================================================================================
-;
-; CHECK ALL OPTIONS WHETHER THEY FIT TO THE APPLICATION;
-;
-; Configure this startup file in the "Settings" section. Search for
-; comments with leading "; <<<". This points to the items to be set.
-;=========================================================================================
-;
 #set    OFF             0
 #set    ON              1
 #set    DEFAULT         2
-#set    LOW_PRIOR       31
-;
 ;=========================================================================================
 ; 4.1  Controller Device
 ;=========================================================================================
@@ -200,27 +26,9 @@
 #set    others          7                       ; MB91460 series
 ;
 ;
-;
 #set    DEVICE          MB91465K                ; <<< select device
 ;
-;=========================================================================================
-; 4.2  Boot / Flash Security 
-;=========================================================================================
-;
 #set    BOOT_FLASH_SEC  OFF                     ; <<< BOOT and Flash Security Vector    
-;
-; The flash devices have two flash and two boot security vectors.  It is important to set
-; the four vectors correctly.  Otherwise it might be possible,  that the flash device is 
-; not accessible any more via the bootrom. Please read carefully the hardware manual.
-; 
-; OFF:  The security feature is switch off. The section SECURITY_VECTORS is reserved and
-;       the vectors are set.
-; ON:   IMPORTANT! The  security vectors are  not set. But the  section SECURITY_VECTORS 
-;       is reserved.  
-;
-; Note: This feature is not supported by every device. Please check the data sheet. This 
-;       feature is not available on MB91461R.
-;
 ;=========================================================================================
 ; 4.3  Stack Type and Stack Size
 ;=========================================================================================
@@ -228,7 +36,6 @@
 #set    USRSTACK        0                       ; user stack:   for main program
 #set    SYSSTACK        1                       ; system stack: for main program and 
 ;                                               ;               interrupts
-;
 ;
 #set    STACKUSE        SYSSTACK                ; <<< set active stack
 ;
@@ -257,7 +64,6 @@
 ;
 #set    I_RAM           ON                      ; <<< select  if  code  in  section IRAM
 ;                                                     should be copied
-;
 ; If this option is activated code located in the  section IRAM is copied during startup 
 ; from ROM to the instruction-RAM. The code is linked for the instruction-RAM.
 ;
@@ -275,13 +81,7 @@
 #set    SUB_32KHZ_CPU__32KHZ_PER_32KHZ_EXT_32KHZ_CAN__2MHZ     0x11
 ;
 ; Oscillation input: 4 MHz 
-#set    MAIN_4MHZ_CPU___2MHZ_PER__1MHZ_EXT__1MHZ_CAN__2MHZ     0x21
-#set    PLL_4MHZ__CPU__48MHZ_PER_16MHZ_EXT_24MHZ_CAN_16MHZ     0x22
 #set    PLL_4MHZ__CPU__64MHZ_PER_16MHZ_EXT_32MHZ_CAN_16MHZ     0x23
-#set    PLL_4MHZ__CPU__80MHZ_PER_20MHZ_EXT_27MHZ_CAN_20MHZ     0x24
-#set    PLL_4MHZ__CPU__80MHZ_PER_20MHZ_EXT_40MHZ_CAN_20MHZ     0x25
-#set    PLL_4MHZ__CPU__96MHZ_PER_16MHZ_EXT_48MHZ_CAN_16MHZ     0x26  ;not MB91V460, ...
-#set    PLL_4MHZ__CPU_100MHZ_PER_20MHZ_EXT_50MHZ_CAN_20MHZ     0x27  ;not MB91V460, ...
 ;
 ; MB91461R only: Oscillation input: 10 MHz
 #set    PLL_10MHZ_CPU__60MHZ_PER_20MHZ_EXT_30MHZ_CAN_20MHZ     0x41
@@ -296,27 +96,6 @@
 ;
 #set    CLOCKSPEED      PLL_4MHZ__CPU__64MHZ_PER_16MHZ_EXT_32MHZ_CAN_16MHZ
 ;                                               ; <<< Select clock configuration 
-;
-; There are different default configurations available, where all necessary settings for 
-; clocks and the related  registers are made.  Beside this configurations,  there is the
-; possibility   to  define  a  user   configuration   in  the  chapter   "Definition  of 
-; Configurations"
-; 
-; - NO_CLOCK means: 
-;   The clock registers are not set by the start-up file.
-;
-; - PLL_4MHZ__CPU__64MHZ_PER_16MHZ_EXT_32MHZ_CAN_16MHZ means:
-;   Main oszillation        =  4 MHz, PLL is activated
-;   CPU clock (CLKB)        = 64 MHZ
-;   Peripheral clock (CLKP) = 16 MHZ
-;   Ext. bus clock (CLKT)   = 32 MHZ
-;   CAN clock (CLKCAN)      = 16 MHz, using PLLx 
-;
-; - CLOCK_USER: 
-;   The user configuration definded in the chapter "Definition of Configurations" is set.
-;
-; Note: Not all  frequencies  are supported  by every device.  Please see  the  hardware 
-;       manual.
 ;
 ;=========================================================================================
 ; 4.7.2  Select Clock Modulator  
@@ -401,113 +180,6 @@
 #if (CLOCKSPEED == NO_CLOCK )
     #set CLOCKSOURCE       NOCLOCK 
 #endif      
-;
-;=========================================================================================
-; 5.2  CLOCKSPEED == SUB_32KHZ_CPU__32KHZ_PER_32KHZ_EXT_32KHZ_CAN__2MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == SUB_32KHZ_CPU__32KHZ_PER_32KHZ_EXT_32KHZ_CAN__2MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91463N) || (DEVICE == MB91461R) 
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     SUBCLOCK                ; Clocksource
-  #set  ENABLE_SUBCLOCK ON                      ; Subclock: ON/OFF
-  #set  PLLSPEED        0x010F                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ;   n. a.
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x0F                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;  32 KHz       
-  #set  PERCLOCK        0x00                    ; 0x486h: DIV0R_P;    => /1    ;  32 KHz  
-  #set  EXTBUSCLOCK     0x00                    ; 0x487h: DIV1R_T;    => /1    ;  32 KHz  
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_MAIN            ; 0x4C0h: CANPRE;     => MAIN  ;   4 MHz
-  #set  PSDVC           0x01                    ; 0x4C0h: CANPRE_DVC; => /2    ;   2 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  #set  REGULATORSEL    0x06                    ; 0x4CEh: REGSEL;
-  #set  REGULATORCTRL   0x00                    ; 0x4CFh: REGCTR;
-  ; Memory Controller
-  #set  FLASHCONTROL    0x032                   ; 0x7002h: FCHCR;
-  #set  FLASHREADT      0xC100                  ; 0x7004h: FMWT; 
-  #set  FLASHMWT2       0x00                    ; 0x7006h: FMWT2;
-#endif 
-;
-;=========================================================================================
-; 5.3  CLOCKSPEED == MAIN__4MHZ_CPU___2MHZ_PER__1MHZ_EXT__1MHZ_CAN__2MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == MAIN_4MHZ_CPU___2MHZ_PER__1MHZ_EXT__1MHZ_CAN__2MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91461R) 
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINCLOCK               ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x010F                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ;   n. a.
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x0F                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;   2 MHz       
-  #set  PERCLOCK        0x01                    ; 0x486h: DIV0R_P;    => /2    ;   1 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; 0x487h: DIV1R_T;    => /2    ;   1 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_MAIN            ; 0x4C0h: CANPRE;     => PLLx  ;   4 MHz
-  #set  PSDVC           0x01                    ; 0x4C0h: CANPRE_DVC; => /2    ;   2 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  #set  REGULATORSEL    0x06                    ; 0x4CEh: REGSEL;
-  #set  REGULATORCTRL   0x00                    ; 0x4CFh: REGCTR;
-  ; Memory Controller
-  #set  FLASHCONTROL    0x032                   ; 0x7002h: FCHCR;
-  #set  FLASHREADT      0xC100                  ; 0x7004h: FMWT;
-  #set  FLASHMWT2       0x00                    ; 0x7006h: FMWT2;  
-#endif           
-;
-;=========================================================================================
-; 5.4  CLOCKSPEED == PLL_4MHZ__CPU__48MHZ_PER_16MHZ_EXT_24MHZ_CAN_16MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == PLL_4MHZ__CPU__48MHZ_PER_16MHZ_EXT_24MHZ_CAN_16MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91461R) 
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x010B                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ;  48 MHz
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x0B                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;  48 MHz       
-  #set  PERCLOCK        0x02                    ; 0x486h: DIV0R_P;    => /3    ;  16 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; 0x487h: DIV1R_T;    => /2    ;  24 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; 0x4C0h: CANPRE;     => PLLx  ;  96 MHz
-  #set  PSDVC           0x05                    ; 0x4C0h: CANPRE_DVC; => /6    ;  16 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  #if (DEVICE == MB91469G) 
-   #set REGULATORSEL    0x36                    ; 0x4CEh: REGSEL;
-  #else
-   #set REGULATORSEL    0x06                    ; 0x4CEh: REGSEL;
-  #endif    
-  #set REGULATORCTRL    0x00                    ; 0x4CFh: REGCTR;    
-   ; Memory Controller
-  #set  FLASHCONTROL    0x032                   ; 0x7002h: FCHCR;
-  #set  FLASHREADT      0xC201                  ; 0x7004h: FMWT;
-  #set  FLASHMWT2       0x00                    ; 0x7006h: FMWT2;   
-#endif        
-;
 ;=========================================================================================
 ; 5.5  CLOCKSPEED == PLL_4MHZ__CPU__64MHZ_PER_16MHZ_EXT_32MHZ_CAN_16MHZ 
 ;=========================================================================================
@@ -543,221 +215,8 @@
 #endif  
 ;
 ;=========================================================================================
-; 5.6  CLOCKSPEED == PLL_4MHZ__CPU__80MHZ_PER_20MHZ_EXT_27MHZ_CAN_20MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == PLL_4MHZ__CPU__80MHZ_PER_20MHZ_EXT_27MHZ_CAN_20MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91461R) 
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x0113                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ;  80 MHz
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x13                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;  80 MHz       
-  #set  PERCLOCK        0x03                    ; 0x486h: DIV0R_P;    => /4    ;  20 MHz 
-  #set  EXTBUSCLOCK     0x02                    ; 0x487h: DIV1R_T;    => /3    ;  27 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; 0x4C0h: CANPRE;     => PLLx  ; 160 MHz
-  #set  PSDVC           0x07                    ; 0x4C0h: CANPRE_DVC; => /8    ;   8 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  #set  REGULATORSEL    0x06                    ; 0x4CEh: REGSEL;
-  #set  REGULATORCTRL   0x00                    ; 0x4CFh: REGCTR;
-  ; Memory Controller
-  #set  FLASHCONTROL    0x032                   ; 0x7002h: FCHCR;
-  #set  FLASHREADT      0xC413                  ; 0x7004h: FMWT;
-  #set  FLASHMWT2       0x10                    ; 0x7006h: FMWT2;
-#endif      
-;
-;=========================================================================================
-; 5.7  CLOCKSPEED == PLL_4MHZ__CPU__80MHZ_PER_20MHZ_EXT_40MHZ_CAN_20MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == PLL_4MHZ__CPU__80MHZ_PER_20MHZ_EXT_40MHZ_CAN_20MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91461R) 
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x0113                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ;  80 MHz
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x13                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;  80 MHz       
-  #set  PERCLOCK        0x03                    ; 0x486h: DIV0R_P;    => /4    ;  20 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; 0x487h: DIV1R_T;    => /2    ;  40 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; 0x4C0h: CANPRE;     => PLLx  ; 160 MHz
-  #set  PSDVC           0x07                    ; 0x4C0h: CANPRE_DVC; => /8    ;   8 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  #set  REGULATORSEL    0x06                    ; 0x4CEh: REGSEL;
-  #set  REGULATORCTRL   0x00                    ; 0x4CFh: REGCTR;
-  ; Memory Controller
-  #set  FLASHCONTROL    0x032                   ; 0x7002h: FCHCR;
-  #set  FLASHREADT      0xC413                  ; 0x7004h: FMWT;
-  #set  FLASHMWT2       0x10                    ; 0x7006h: FMWT2;
-#endif      
-;
-;=========================================================================================
-; 5.8  CLOCKSPEED == PLL_4MHZ__CPU__96MHZ_PER_16MHZ_EXT_48MHZ_CAN_16MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == PLL_4MHZ__CPU__96MHZ_PER_16MHZ_EXT_48MHZ_CAN_16MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91464A) || (DEVICE == MB91465K) || (DEVICE == MB91463N) ||\
-      (DEVICE == MB91461R) || (DEVICE == MB91467R)
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x0117                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ;  96 MHz
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x17                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;  64 MHz       
-  #set  PERCLOCK        0x05                    ; 0x486h: DIV0R_P;    => /6    ;  16 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; 0x487h: DIV1R_T;    => /2    ;  32 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; 0x4C0h: CANPRE;     => PLLx  ; 192 MHz
-  #set  PSDVC           0x0B                    ; 0x4C0h: CANPRE_DVC; => /12   ;  16 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  #if (DEVICE == MB91469G) 
-   #set REGULATORSEL    0x36                    ; 0x4CEh: REGSEL;
-  #else
-   #set REGULATORSEL    0x06                    ; 0x4CEh: REGSEL;
-  #endif    
-  #set REGULATORCTRL    0x00                    ; 0x4CFh: REGCTR;    
-  ; Memory Controller
-  #set FLASHCONTROL     0x032                   ; 0x7002h: FCHCR;
-  #set FLASHREADT       0xC413                  ; 0x7004h: FMWT;
-  #set FLASHMWT2        0x10                    ; 0x7006h: FMWT2;
-#endif        
-;
-;=========================================================================================
-; 5.9  CLOCKSPEED == PLL_4MHZ__CPU_100MHZ_PER_20MHZ_EXT_50MHZ_CAN_20MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == PLL_4MHZ__CPU_100MHZ_PER_20MHZ_EXT_50MHZ_CAN_20MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91464A) || (DEVICE == MB91465K) || (DEVICE == MB91463N) ||\
-      (DEVICE == MB91461R) || (DEVICE == MB91467R) || (DEVICE == MB91467D)
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x0118                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ; 100 MHz
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x17                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ; 100 MHz       
-  #set  PERCLOCK        0x04                    ; 0x486h: DIV0R_P;    => /5    ;  20 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; 0x487h: DIV1R_T;    => /2    ;  50 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; 0x4C0h: CANPRE;     => PLLx  ; 200 MHz
-  #set  PSDVC           0x09                    ; 0x4C0h: CANPRE_DVC; => /10   ;  20 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  #if (DEVICE == MB91469G) 
-   #set REGULATORSEL    0x36                    ; 0x4CEh: REGSEL;
-  #else
-   #set REGULATORSEL    0x06                    ; 0x4CEh: REGSEL;
-  #endif    
-  #set  REGULATORCTRL   0x00                    ; 0x4CFh: REGCTR;    
-  ; Memory Controller
-  #set  FLASHCONTROL    0x032                   ; 0x7002h: FCHCR;
-  #set  FLASHREADT      0xC413                  ; 0x7004h: FMWT;
-  #set  FLASHMWT2       0x10                    ; 0x7006h: FMWT2;
-#endif        
-;
-;=========================================================================================
-; 5.10  CLOCKSPEED == PLL_10MHZ_CPU__60MHZ_PER_20MHZ_EXT_30MHZ_CAN_20MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == PLL_10MHZ_CPU__60MHZ_PER_20MHZ_EXT_30MHZ_CAN_20MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91464A) || (DEVICE == MB91467B) || (DEVICE == MB91467C) ||\
-      (DEVICE == MB91467D) || (DEVICE == MB91469G) || (DEVICE == MB91465K) ||\
-      (DEVICE == MB91463N) || (DEVICE == MB91467R) || (DEVICE == MB91465X) 
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x0105                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ;  60 MHz
-  #set  DIV_G           0x0B                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x1F                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;  60 MHz       
-  #set  PERCLOCK        0x02                    ; 0x486h: DIV0R_P;    => /3    ;  20 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; 0x487h: DIV1R_T;    => /2    ;  30 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; 0x4C0h: CANPRE;     => PLLx  ; 120 MHz
-  #set  PSDVC           0x05                    ; 0x4C0h: CANPRE_DVC; => /6    ;  20 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  ; -
-  ; Memory Controller
-  ; -
-#endif        
-;
-;=========================================================================================
-; 5.11  CLOCKSPEED == PLL_20MHZ_CPU__60MHZ_PER_20MHZ_EXT_30MHZ_CAN_20MHZ 
-;=========================================================================================
-;
-#if (CLOCKSPEED == PLL_20MHZ_CPU__60MHZ_PER_20MHZ_EXT_30MHZ_CAN_20MHZ )
-;
-; Start restriction; Maximum frequency
-  #if (DEVICE == MB91464A) || (DEVICE == MB91467B) || (DEVICE == MB91467C) ||\
-      (DEVICE == MB91467D) || (DEVICE == MB91469G) || (DEVICE == MB91465K) ||\
-      (DEVICE == MB91463N) || (DEVICE == MB91467R) || (DEVICE == MB91465X) 
-     #error: Frequency is not supported by this device.
-  #endif 
-; End restriction
-;
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; Subclock: ON/OFF
-  #set  PLLSPEED        0x0102                  ; 0x48Ch, 0x48Dh: PLLDIVM/N    ; 60 MHz
-  #set  DIV_G           0x0F                    ; 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x1F                    ; 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; 0x486h: DIV0R_B;    => /1    ;  60 MHz       
-  #set  PERCLOCK        0x02                    ; 0x486h: DIV0R_P;    => /3    ;  20 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; 0x487h: DIV1R_T;    => /2    ;  30 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; 0x4C0h: CANPRE;     => PLLx  ; 120 MHz
-  #set  PSDVC           0x05                    ; 0x4C0h: CANPRE_DVC; => /6    ;  20 MHz
-  #set  CANCLOCK        0x00                    ; 0x4C1h: CANCKD; all CAN Clocks enabled
-  ; Voltage Regulator 
-  ; -
-  ; Memory Controller
-  ; -
-#endif  
-;      
-;=========================================================================================
 ; 6  Section and Data Declaration
 ;=========================================================================================
-
         .export __start             
         .import _main
         .import _RAM_INIT
@@ -795,22 +254,14 @@
         .import _ROM_IRAM
 #endif
                     
-#if (DEVICE != MB91461R)
-    #if (DEVICE == MB91469G)
-        .section        SECURITY_VECTORS, code, locate = 0x248000
-    #else 
-        .section        SECURITY_VECTORS, code, locate = 0x148000
-    #endif
-    
-    #if (BOOT_FLASH_SEC == OFF)        
+#if (BOOT_FLASH_SEC == OFF)        
         .data.w 0xFFFFFFFF
         .data.w 0xFFFFFFFF
         .data.w 0xFFFFFFFF
         .data.w 0xFFFFFFFF       
-    #else
+#else
         .res.w          4
-    #endif         
-#endif     
+#endif         
    
 ;-----------------------------------------------------------------------------------------
 ; MACRO Clear RC Watchdog
@@ -842,7 +293,7 @@ startnop:
         NOP       
 ;   
         ANDCCR          #0xEF                   ; disable interrupts   
-        STILM           #LOW_PRIOR              ; set interrupt level to low prior
+        STILM           #31 		            ; set interrupt level to low prior
         ClearRCwatchdog                         ; clear harware watchdog
 
 ;=========================================================================================
