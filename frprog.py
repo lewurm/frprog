@@ -188,10 +188,12 @@ tty = SerialPort(DEVICE, 100, REAL_BAUDRATE)
 
 # let the fun begin!
 for seq in flashseqs:
-	if(seq.address >= 0x148000):
+	if(seq.address <= 0x40000):
+		addr = seq.address
+	else:
 		continue
-	print "RAMing", len(seq.data), "bytes at address", hex(seq.address)
-	cmdWRITE(seq.address - flashseqs[0].address + 0x30000, len(seq.data), seq.data)
+	print "RAMing", len(seq.data), "bytes at address", hex(addr)
+	cmdWRITE(addr, len(seq.data), seq.data)
 
 cmdCALL(0x30000);
 sys.exit(0)

@@ -57,15 +57,6 @@
 ;       Check the stack information files (*.stk) in the LIB\911 directory.
 ;
 ;=========================================================================================
-; 4.4  Copy code from Flash to I-RAM
-;=========================================================================================
-;
-#set    I_RAM           ON                      ; <<< select  if  code  in  section IRAM
-;                                                     should be copied
-; If this option is activated code located in the  section IRAM is copied during startup 
-; from ROM to the instruction-RAM. The code is linked for the instruction-RAM.
-;
-;=========================================================================================
 ; 4.7  Clock Configuration
 ;=========================================================================================
 ;=========================================================================================
@@ -188,11 +179,10 @@
 ;=========================================================================================
         .export __start             
         .import _main
-        .import _RAM_INIT
-        .import _ROM_INIT
 ;=========================================================================================
 ; 6.1  Define Stack Size
 ;=========================================================================================
+        .section        DATA,  data,  align=4
  .SECTION  SSTACK, STACK, ALIGN=4
 #if STACK_RESERVE == ON
         .EXPORT         __systemstack, __systemstack_top
@@ -204,14 +194,7 @@
 ;=========================================================================================
 ; 6.2  Define Sections
 ;=========================================================================================
-        .section        DATA,  data,  align=4
-        .section        INIT,  data,  align=4
-        .section        IRAM,  code,  align=4
-        
-#if I_RAM 
-        .import _RAM_IRAM
-        .import _ROM_IRAM
-#endif
+		.section        CODE, code, align=4
                     
 ;-----------------------------------------------------------------------------------------
 ; MACRO Clear RC Watchdog
@@ -220,9 +203,7 @@
         LDI             #0x4C7,R7               ; clear RC watchdog
         BANDL           #0x7,@R7
 #endm
-        .section        CODE, code, align=4
         .section        CODE_START, code, align=4
-#pragma section CODE=IRAM,attr=CODE
 
 ;=========================================================================================
 ; 7.  S T A R T 
@@ -565,24 +546,6 @@ noClockStartup:
         ClearRCwatchdog
 
 ;=========================================================================================
-; 7.8  Copy code from Flash to I-RAM 
-;=========================================================================================
-#if I_RAM == ON
-        LDI             #_RAM_IRAM, R0
-        LDI             #_ROM_IRAM, R1
-        LDI             #sizeof(IRAM), R13
-        CMP             #0, R13
-        BEQ             copy_iram_end
-copy_iram1: 
-        ADD             #-1, R13
-        LDUB            @(R13, R1), R12
-        BNE:D           copy_iram1
-        STB             R12, @(R13, R0)
-copy_iram_end: 
-        ClearRCwatchdog
-#endif
-
-;=========================================================================================
 ; Standard C startup
 ;=========================================================================================
 ;=========================================================================================
@@ -612,40 +575,6 @@ data_clr2:
 data_clr_end:
         ClearRCwatchdog
         
-;=========================================================================================
-; 7.11  Copy Init section from ROM to RAM
-;=========================================================================================
-; copy rom
-; All initialised data's (e.g. int i=1) must be stored in ROM/FLASH area. 
-; (start value)
-; The Application must copy the Section (Init) into the RAM area.
-        LDI             #_RAM_INIT, R0
-        LDI             #_ROM_INIT, R1
-        LDI             #sizeof(INIT), R2
-        CMP             #0, R2
-        BEQ:D           copy_rom_end
-        LDI             #3, R12
-        AND             R2, R12
-        BEQ:D           copy_rom2
-        MOV             R2, R13
-        MOV             R2, R3
-        SUB             R12, R3
-copy_rom1:
-        ADD             #-1, R13
-        LDUB            @(R13, R1), R12
-        CMP             R3, R13
-        BHI:D           copy_rom1
-        STB             R12, @(R13, R0)
-        CMP             #0, R3
-        BEQ:D           copy_rom_end
-copy_rom2:
-        ADD             #-4, R13
-        LD              @(R13, R1), R12
-        BGT:D           copy_rom2
-        ST              R12, @(R13, R0)
-copy_rom_end:
-        ClearRCwatchdog
-
 start_main:
 ;=========================================================================================
 ; 7.14  call main routine

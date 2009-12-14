@@ -1,7 +1,5 @@
 #include "mb91465k.h"
 
-#pragma section CODE=IRAM,attr=CODE
-
 void InitUart4(void)
 {
 	// Initialize UART asynchronous mode

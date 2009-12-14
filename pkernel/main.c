@@ -1,8 +1,6 @@
 #include "mb91465k.h"
 #include "flash.h"
 
-#pragma section CODE=IRAM,attr=CODE
-
 #define BUFSIZE 0x20
 #define cleardata() memset(data,0,BUFSIZE)
 

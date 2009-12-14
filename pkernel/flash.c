@@ -10,9 +10,6 @@
 
 static unsigned int IFlag;
 
-#pragma section CODE=IRAM,attr=CODE
-	
-
 void FLASH_PrepareWriteHalfWordMode()
 {
 	/*	Set FLASH Access Mode via BootROM Routine	*/

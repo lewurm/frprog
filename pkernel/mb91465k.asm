@@ -9,7 +9,5 @@
             1.00   UMa    Initial Version
 -----------------------------------------------------------------------------*/
 
-#pragma section CODE=IRAM,attr=CODE
-
 #define __IO_DEFINE
 #include "mb91465k.h"

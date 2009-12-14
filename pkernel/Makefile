@@ -30,16 +30,14 @@ LDFLAGS = -AL 2
 LDFLAGS += -ra D_RAM=0x0002C000/0x0002FFFF
 LDFLAGS += -ra ID_RAM=0x00030000/0x00031FFF
 LDFLAGS += -ro ROM_AREA=0x00080000/0x000FFFFF
-LDFLAGS += -sc DATA/Data+INIT/Data+SSTACK/Data=D_RAM
-LDFLAGS += -sc IRAM/Code=ID_RAM
-LDFLAGS += -sc CODE+@INIT+@IRAM=ROM_AREA
-LDFLAGS += -sc CODE_START/Code=0x000F4000
+LDFLAGS += -sc DATA/Data+SSTACK/Data=D_RAM
+LDFLAGS += -sc CODE_START/Code+CODE=ID_RAM
 LDFLAGS += -check_locate -pl 60 -pw 132 -Xals
-LDFLAGS += -Xalr -na -w 1 -Xdof -Xset_rora -cwno -a $(CPUT)
+LDFLAGS += -Xalr -na -w 1 -Xdof -Xset_rora -Xcwno -a $(CPUT)
 
 LIBRFLAGS = -dt s,d,r,a -pl 60 -pw 132 -cwno $(CPUT)
 
-CONVFLAGS = -cwno -Xdof
+CONVFLAGS = -Xcwno -Xdof
 
 DEFINES =
 
