@@ -93,102 +93,7 @@ unsigned char FLASH_ChipErase(void)
 	return flag;
 }
 	
-unsigned char FLASH_SectorErase(unsigned int secadr)
-{
-	unsigned char flag = 0;
-	volatile unsigned int value = 0;
-	
-	/*	Set FLASH access mode to 16Bit Write Mode	*/
-	FLASH_PrepareWriteHalfWordMode();
-					
-	secadr |= 0x0003;
-	
-	/*	Start FLASH Sector Erase Sequence	*/
-	*hseq_1 = 0x00AA;
-	*hseq_2 = 0x0055;
-	*hseq_1 = 0x0080;
-	*hseq_1 = 0x00AA;
-	*hseq_2 = 0x0055;
-	*(unsigned  short int *)secadr = 0x0030;
-
-	/*	Wait for the Auto Algorithm to start	*/
-	while( !( *(unsigned  short int *)secadr & SETIMR ) )
-	{
-		/*	Feed the Hardware Watchdog	*/
-		HWWD_CL = 0;
-		
-		/*	Check for Pending Interrupts	*/
-		if( FLASH_CheckPendingInterrupt() )
-		{   		
-			/*	Wait for Sector Erase Suspend	*/
-			FLASH_SuspendSectorErase(secadr);
-			
-	        /*	Set FLASH access mode to 32Bit Read Mode	*/
-	        FLASH_PrepareReadMode();
-			
-			/*	Keep on checking for pending Interrupts	*/
-			while( FLASH_CheckPendingInterrupt() ) HWWD_CL = 0;
-			
-			/*	Set FLASH access mode to 16Bit Write Mode	*/
-	        FLASH_PrepareWriteHalfWordMode();
-						
-			/*	Sector Erase Resume	*/
-			FLASH_ResumeSectorErase(secadr);
-		}		
-	}
-
-	/*	Wait for the Auto Algorithm to finish	*/
-	while( flag == 0 )
-	{
-		/* Feed Hardware Watchdog */
-		HWWD_CL = 0;
-
-		/*	Check for Pending Interrupts	*/
-		if( FLASH_CheckPendingInterrupt() )
-		{    		
-			/*	Sector Erase Suspend	*/
-			FLASH_SuspendSectorErase(secadr);
-			
-	        /*	Set FLASH access mode to 32Bit Read Mode	*/
-	        FLASH_PrepareReadMode();
-    					
-			/*	Keep on checking for pending Interrupts	*/
-			while( FLASH_CheckPendingInterrupt() ) HWWD_CL = 0;
-			
-			/*	Set FLASH access mode to 16Bit Write Mode	*/
-	        FLASH_PrepareWriteHalfWordMode();
-						
-			/*	Sector Erase Resume	*/
-			FLASH_ResumeSectorErase(secadr);
-		}		
-		
-			
-		/*	Check the Hardware Sequence Flags	*/				
-		if( ( *(unsigned short int *)secadr /* value */ & DPOLL ) )
-		{
-			flag = 1;
-		}
-		if( ( *(unsigned short int *)secadr /* value */ & TLOVER ) )
-		{
-			if( ( *(unsigned short int *)secadr /* value */ & DPOLL ) )
-			{
-				flag = 1;
-			}
-			else
-			{
-				/*	Reset FLASH	*/
-				FLASH_ReadReset();
-				
-				flag = 2;
-			}
-		}
-	}
-	/*	Set FLASH access mode to 32Bit Read Mode	*/
-	FLASH_PrepareReadMode();
-		
-	return flag;
-}
-
+#if 0 //maybe implement this check too!
 unsigned char FLASH_SectorBlankCheck(unsigned int secaddr, unsigned int size)
 {
 	unsigned int count;
@@ -216,6 +121,7 @@ unsigned char FLASH_SectorBlankCheck(unsigned int secaddr, unsigned int size)
 	
 	return 1;
 }
+#endif
 
 unsigned char FLASH_WriteHalfWord(unsigned int adr, unsigned short int data)
 {
@@ -262,41 +168,11 @@ unsigned char FLASH_WriteHalfWord(unsigned int adr, unsigned short int data)
 	return flag;
 }
 
-
 unsigned char FLASH_ReadReset()
 {
 	*hseq_1 = 0x00F0;
 	
 	return 1;
-}
-
-
-unsigned char FLASH_SuspendSectorErase(unsigned int secaddr)
-{		
-	/* Write Sector Erase Suspend Command	*/
-	*(volatile unsigned short int *)secaddr = 0x00B0;
-
-	/*	Wait for the FLASH macro to suspend sector erase	*/		
-	while(!(*(unsigned short int *)secaddr /* value */ & DPOLL) && (*(unsigned short int *)secaddr /* value */ & SETIMR))
-	{
-		HWWD_CL=0;
-	}
-	
-	return 1;
-}
-
-unsigned char FLASH_ResumeSectorErase(unsigned int secaddr)
-{
-	/*	Write the Sector Erase Resume Command	*/
-	*(volatile unsigned short int *)secaddr = 0x0030;
-	
-	/*	Wait for the FLASH Macro to resume sector erase	*/		
-	while((*(unsigned short int *)secaddr /*value */ & DPOLL) && !(*(unsigned short int *)secaddr /*value */ & SETIMR))
-	{
-		HWWD_CL=0;
-	}
-	
-	return 1;		
 }
 
 unsigned char FLASH_CheckPendingInterrupt()
@@ -307,3 +183,4 @@ unsigned char FLASH_CheckPendingInterrupt()
 	/*	and return 1 when an Interrupt is pending	*/
 	return 0;
 }
+

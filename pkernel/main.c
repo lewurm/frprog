@@ -75,24 +75,6 @@ void main(void)
 				Putch4(0x23);
 				break;
 
-			case 0x12: //erase
-				Putch4(0x11);
-				address = recvdword();
-				increaseled();
-
-				size = recvword();
-				increaseled();
-
-				PDR14 = 0xff;
-				for(i=0; i<(size+4); i+=4) { /* erase */
-					if(FLASH_SectorErase(address + i) != 1) {
-						panic();
-					}
-					increaseled();
-				}
-				Putch4(0x18); //Erasing done.
-				break;
-
 			case 0x13: //receive
 				Putch4(0x37);
 				increaseled();
