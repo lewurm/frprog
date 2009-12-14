@@ -97,8 +97,6 @@ def cmdCHECKSUM():
 	recvChecksum()
 
 def cmdBAUDRATE(baudrate):
-	global last_checksum
-
 	# send BAUDRATE command
 	sendByte(0x01)
 	if (recvByte() != 0xF1):
@@ -107,10 +105,7 @@ def cmdBAUDRATE(baudrate):
 	if (recvByte() != 0x86):
 		raise Exception
 	# send desired baudrate
-	sendByte(baudrate & 0xFF)
-	sendByte((baudrate >> 8) & 0xFF)
-	sendByte((baudrate >> 16) & 0xFF)
-	sendByte((baudrate >> 24) & 0xFF)
+	sendDWord(baudrate)
 
 class FlashSequence(object):
 	def __init__(self, address, data):
