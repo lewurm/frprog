@@ -145,35 +145,6 @@
 #set    PSCLOCK_MAIN    0x30                    ; select Main Oscillation
 ;
 ;=========================================================================================
-; 5.1  CLOCKSPEED == CLOCK_USER <<<
-;=========================================================================================
-; Must be configured only in the case of CLOCKSPEED is set to CLOCK_USER. Please see the 
-; corresponding application note.
-;
-#if (CLOCKSPEED == CLOCK_USER )
-  #set  CLOCKSOURCE     MAINPLLCLOCK            ; <<< Clocksource
-  #set  ENABLE_SUBCLOCK OFF                     ; <<< Subclock: ON/OFF
-  #set  PLLSPEED        0x010F                  ; <<< 0x48Ch, 0x48Dh: PLLDIVM/N ; 64 MHz
-  #set  DIV_G           0x0F                    ; <<< 0x48Eh: PLLDIVG; 
-  #set  MUL_G           0x0F                    ; <<< 0x48Fh: PLLMULG;     
-  ; Clock Divider
-  #set  CPUCLOCK        0x00                    ; <<< 0x486h: DIV0R_B;   => /1  ; 64 MHz       
-  #set  PERCLOCK        0x03                    ; <<< 0x486h: DIV0R_P;   => /4  ; 16 MHz 
-  #set  EXTBUSCLOCK     0x01                    ; <<< 0x487h: DIV1R_T;   => /2  ; 32 MHz 
-  ; CAN Clock
-  #set  PSCLOCKSOURCE   PSCLOCK_PLL             ; <<< 0x4C0h: CANPRE;    => PLLx;128 MHz
-  #set  PSDVC           0x07                    ; <<< 0x4C0h: CANPRE_DVC;=> /8  ; 16 MHz
-  #set  CANCLOCK        0x00                    ; <<< 0x4C1h: CANCKD;    
-  ; Voltage Regulator 
-  #set  REGULATORSEL    0x06                    ; <<< 0x4CEh: REGSEL;
-  #set  REGULATORCTRL   0x00                    ; <<< 0x4CFh: REGCTR;
-  ; Memory Controller
-  #set  FLASHCONTROL    0x032                   ; <<< 0x7002h: FCHCR;
-  #set  FLASHREADT      0xC413                  ; <<< 0x7004h: FMWT;
-  #set  FLASHMWT2       0x10                    ; <<< 0x7006h: FMWT2;
-#endif  
-;
-;=========================================================================================
 ; 5.2  CLOCKSPEED == NO_CLOCK
 ;=========================================================================================
 ;
@@ -535,17 +506,6 @@ clock_startup:
         ORB             R1, @R0                 ; store data to CLKR register
 #endif
        
-       
-#if ENABLE_SUBCLOCK == ON
-        LDI             #0x0484, R0             ; Clock source control reg CLKR
-        LDI             #0x08, R1               ; enable subclock operation
-        ORB             R1, @R0                 ; store data to CLKR register
-        LDI             #0x4CA, R0              ; Sub Clock oszilation 
-        LDI             #0x00, R1               ; stabilitsation time = 32 ms
-        AND             R1, @R0  
-        BORH            #0x02, @R0      
-#endif      
-      
 ;=========================================================================================
 ; 7.6.5  Wait for PLL oscillation stabilisation
 ;=========================================================================================
@@ -604,36 +564,9 @@ PLLwait:
         STB             R1, @R0                 ; set CANCLOCK
 
 ;=========================================================================================
-; 7.6.6.4  Switch Main Clock Mode
-;=========================================================================================
-#if CLOCKSOURCE == MAINCLOCK
-
-;=========================================================================================
-; 7.6.6.5  Switch Subclock Mode
-;=========================================================================================
-#elif ( (CLOCKSOURCE == SUBCLOCK) )
-    #if ENABLE_SUBCLOCK == ON
-        LDI             #0x4CA, R12
-subStabTime:        
-        ClearRCwatchdog                         ; clear harware watchdog
-        BTSTH           #8, @R12                ; wait until sub clock stabilisation
-        BEQ             subStabTime             ; time is over
-        LDI             #0x0, R1
-        STB             R1, @R12
-
-        LDI             #0x0484, R0             ; Clock source control reg CLKR
-        LDI             #0x01, R1               ; load value to select main clock
-        ORB             R1, @R0                 ; enable main clock (1/2 external)        
-        LDI             #0x03, R1               ; load value to select subclock
-        ORB             R1, @R0                 ; enable subclock as clock source       
-    #else
-        #error: Wrong setting! The clock source is subclock, but the subclock is disabled.
-    #endif
-
-;=========================================================================================
 ; 7.6.7  Switch to PLL Mode
 ;=========================================================================================
-#elif ( (CLOCKSOURCE == MAINPLLCLOCK) )
+#if ( (CLOCKSOURCE == MAINPLLCLOCK) )
 
 #if (DIV_G != 0x00)
         LDI             #0x0490, R0             ; PLL Ctrl Register   
@@ -674,20 +607,6 @@ gearUpLoop:
 
 #endif
 noClockStartup:
-
-;=========================================================================================
-; 7.7  Set BusInterface
-;=========================================================================================
-; Start restriction; No ext. bus interface
-#if (DEVICE != MB91464A) && (DEVICE != MB91467C) && (DEVICE != MB91465K) &&  \
-    (DEVICE != MB91463N) && (DEVICE != MB91465X)
-; End restriction
-        NOP
-smd_cs_mb91461r:
-emu_sram_cs_mb91461r:
-smd_cs:
-
-#endif                                          ; #endif (excl. devices)
         ClearRCwatchdog
 
 ;=========================================================================================
