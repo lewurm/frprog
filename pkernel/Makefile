@@ -1,16 +1,15 @@
-# TODO: make upload, remove warnings
-
-# hinweise:
-# wenn folgende meldung kommt
+# note:
+# when this message appears on build
 #> "*** F9012D : tool execute is failed (fasm911s)"
-# per 'wine regedit' den string "Path" in
+# you have to set the "Path" environment var in wine.
+# start 'wine regedit' and create a string "Path" in
 #> HKEY_CURRENT_USER/Environment
-# setzen, naemlich auf die ausgabe von
+# and set it to the output of
 #> winepath $FUJDEV/Bin
-# natuerlich muss $FUJDEV richtig gesetzt sein!
+# consider you have to set $FUJDEV properly
 
 ifeq ($(strip $(FUJDEV)),)
-$(error "Set FUJDEV in your environment. Ususally this is the Rootpath of the Softune installer. You MUST NOT install it through wine.")
+$(error "Set FUJDEV in your environment. Ususally this is the Rootpath of the Softune installer package. You MUST NOT install it through wine.")
 endif
 
 PREFIX = wine $(FUJDEV)/Bin/

@@ -16,16 +16,6 @@
 /* ELIGIBILITY FOR ANY PURPOSES                                              */
 /*                 (C) Fujitsu Microelectronics Europe GmbH                  */
 /* ************************************************************************* */
-/* ---------------------------------------------------------------------- */
-/*  Id: MB91465K.h,v 1.5 2007/01/04 11:04:48 meffen Exp   */
-/* ----------------------------------------------------------------------                                  */
-/*  Id: MB91465K.h,v 1.5 2007/01/04 11:04:48 meffen Exp   */
-/*      - removed LCD and Sound Controller */
-/* Id: MB91465K.h,v 1.4 2006/11/30 14:39:18 meffen Exp  */
-/*      - -added registers: ADER (32Bit access)         */
-/*                          ADCS (16Bit access)         */
-/*                          ADCR (16Bit access)         */
-/*                          ADCT (16Bit access)         */
 
 /* ASSEMBLER DEFINITIONS : */
 

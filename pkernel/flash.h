@@ -1,10 +1,3 @@
-/*****************************************************************************/
-/* THIS SAMPLE CODE IS PROVIDED AS IS AND IS SUBJECT TO ALTERATIONS. FUJITSU */
-/* MICROELECTRONICS ACCEPTS NO RESPONSIBILITY OR LIABILITY FOR ANY ERRORS OR */
-/* ELIGIBILITY FOR ANY PURPOSES.                                             */
-/*                 (C) Fujitsu Microelectronics Europe GmbH                  */
-/*****************************************************************************/
-
 #ifndef __FLASH_H__
 #define __FLASH_H__
 
@@ -31,4 +24,4 @@ unsigned int FLASH_SaveDisableInterruptFlag(void);
 void FLASH_RestoreInterruptFlag(unsigned int flag);
 unsigned char FLASH_CheckPendingInterrupt(void);
 
-#endif	/* __FLASH_H__	*/
+#endif
