@@ -201,14 +201,6 @@
  __systemstack_top: 
 #endif
  
-        .SECTION  USTACK, STACK, ALIGN=4
-#if STACK_RESERVE == ON
-         .EXPORT        __userstack, __userstack_top
- __userstack:
-        .RES.B          STACK_USR_SIZE
- __userstack_top:
- 
-#endif
 ;=========================================================================================
 ; 6.2  Define Sections
 ;=========================================================================================
@@ -244,24 +236,12 @@ startnop:
         ClearRCwatchdog                         ; clear harware watchdog
 
 ;=========================================================================================
-; 7.1  Initialise Stack Pointer and Table Base Register
+; 7.1  Initialise Stack Pointer
 ;=========================================================================================
 #if STACKUSE == SYSSTACK       
-        ORCCR           #0x20
-        LDI             #__userstack_top, SP    ; initialize SP
         ANDCCR          #0xDF
         LDI             #__systemstack_top, SP  ; initialize SP
 #endif
-
-#if STACKUSE == USRSTACK
-        ANDCCR          #0xDF
-        LDI             #__systemstack_top, SP  ; initialize SP
-        ORCCR           #0x20
-        LDI             #__userstack_top, SP    ; initialize SP
-#endif
-
-smd_tbr: 
-        MOV             R0, TBR         
 
 #if (CLOCKSOURCE != NOCLOCK)                                          
 ;=========================================================================================
