@@ -9,9 +9,6 @@ KERNEL_BAUDRATE=38400
 
 def recvByte():
 	i = tty.read()
-	while len(i)==0:
-		time.sleep(0.03)
-		i = tty.read()
 	return ord(i)
 
 def recvByteTO(b): #with timeout
@@ -90,7 +87,7 @@ flashseqs = []
 
 
 print "Initializing serial port..."
-tty = SerialPort(DEVICE, 0, KERNEL_BAUDRATE)
+tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
 
 # check command line arguments
 if len(sys.argv) != 2:
