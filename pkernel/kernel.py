@@ -56,17 +56,9 @@ def pkernWRITE(address, size, data):
 	sendDWord(address)
 	sendWord(size)
 
-	if (recvByte() != 0x04):
-		raise Exception
-	print "Received Metadata."
-
 	# write binary stream of data
 	for i in range(0, size):
 		sendByte(data[i])
-
-	if (recvByte() != 0x08):
-		raise Exception
-	print "Received Data."
 
 	if (recvByte() != 0x28):
 		raise Exception
@@ -144,6 +136,9 @@ for seq in flashseqs:
 	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
 	pkernWRITE(seq.address, len(seq.data), seq.data)
 
-sendByte(0x99);
-
+"""
+sendByte(0x99) #exit and wait
 print "Reset your board now to run code from Flash"
+"""
+
+sendByte(0x97) #exit and restart

@@ -7,7 +7,6 @@
 static void increaseled(void)
 {
 	PDR14 = ~(((~PDR14)+1)%256);
-	HWWD_CL = 0;
 }
 
 static unsigned char recvbyte(void)
@@ -106,13 +105,11 @@ void main(void)
 				size = recvword();
 				increaseled();
 
-				Putch4(0x04); //Received Metadata.
 				PDR14 = 0xff;
 				for(i=0; i<size; i++) { /* get data */
 					increaseled();
 					data[i] = recvbyte();
 				}
-				Putch4(0x08); //Received Data.
 
 				PDR14 = 0xff;
 				for(i=0; i<size; i+=2) { /* flash the data */
@@ -124,6 +121,11 @@ void main(void)
 				}
 				Putch4(0x28); //Flashing done.
 				break;
+
+			case 0x97: /* exit and restart (let do this by the watchdog!) */
+				while(1) {
+					increaseled();
+				}
 
 			case 0x99: /* exit */
 				running = 0;
