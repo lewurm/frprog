@@ -10,12 +10,12 @@ KERNEL_BAUDRATE=38400
 def recvByte():
 	i = tty.read()
 	while len(i)==0:
-		time.sleep(0.01)
+		time.sleep(0.03)
 		i = tty.read()
 	return ord(i)
 
 def sendByte(byte):
-	time.sleep(0.501) # just to get sure, wait 1ms
+	time.sleep(0.005) # just to get sure, wait 5ms
 	tty.write(chr(byte))
 	tty.flush()
 
@@ -29,6 +29,17 @@ def sendDWord(dword):
 	sendByte((dword >> 16) & 0xFF)
 	sendByte((dword >> 24) & 0xFF)
 
+def pkernERASE(address, size):
+	sendByte(0x12)
+	if (recvByte() != 0x11):
+		raise Exception
+	sendDWord(address)
+	sendWord(size)
+	if (recvByte() != 0x18):
+		raise Exception
+	print "Erasing done."
+
+
 def pkernWRITE(address, size, data):
 	print "address:", hex(address), "size:", size
 	# send WRITE command
@@ -38,6 +49,7 @@ def pkernWRITE(address, size, data):
 	# tell desired address and size
 	sendDWord(address)
 	sendWord(size)
+
 	if (recvByte() != 0x04):
 		raise Exception
 	print "Received Metadata."
@@ -49,10 +61,6 @@ def pkernWRITE(address, size, data):
 	if (recvByte() != 0x08):
 		raise Exception
 	print "Received Data."
-
-	if (recvByte() != 0x18):
-		raise Exception
-	print "Erasing done."
 
 	if (recvByte() != 0x28):
 		raise Exception
@@ -113,10 +121,14 @@ for line in fp:
 
 print "The following flash sequences have been read in:"
 for seq in flashseqs:
-	print hex(seq.address) + ":", seq.data
+	print hex(seq.address) + ":", [hex(x) for x in seq.data]
 
 
 # let the fun begin!
+for seq in flashseqs:
+	print "Erasing", len(seq.data), "bytes at address", hex(seq.address)
+	pkernERASE(seq.address, len(seq.data))
+
 for seq in flashseqs:
 	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
 	pkernWRITE(seq.address, len(seq.data), seq.data)

@@ -20,10 +20,10 @@ static unsigned char recvbyte(void)
 static unsigned short recvword(void)
 {
 	static unsigned char b1, b2;
-	static unsigned int ret;
+	static unsigned short ret;
 	b1 = recvbyte();
 	b2 = recvbyte();
-	ret = (b2 << 8) | b1;
+	ret = (unsigned short)(b2 << 8) | b1;
 	return ret;
 }
 
@@ -35,7 +35,7 @@ static unsigned int recvdword(void)
 	b2 = recvbyte();
 	b3 = recvbyte();
 	b4 = recvbyte();
-	ret = (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
+	ret = ((unsigned int) (b4 << 24)) | ((unsigned int) (b3 << 16)) | ((unsigned int) (b2 << 8)) |(unsigned int)b1;
 	return ret;
 }
 
@@ -48,7 +48,6 @@ static void halt(void)
 
 static void panic(void)
 {
-	PDR14 = 0xff;
 	PDR14 = 0x22;
 	halt();
 }
@@ -56,7 +55,7 @@ static void panic(void)
 void main(void)
 {
 	unsigned int address;
-	unsigned short i, size;
+	unsigned short i, size, next;
 	unsigned char running = 1, data[BUFSIZE] = {0};
 	
 	PORTEN = 0x3; /* enable I/O Ports */
@@ -72,6 +71,24 @@ void main(void)
 		cleardata();
 		increaseled();
 		switch(recvbyte()) {
+			case 0x12: //erase
+				Putch4(0x11);
+				address = recvdword();
+				increaseled();
+
+				size = recvword();
+				increaseled();
+
+				PDR14 = 0xff;
+				for(i=0; i<(size+4); i+=4) { /* erase */
+					if(FLASH_SectorErase(address + i) != 1) {
+						panic();
+					}
+					increaseled();
+				}
+				Putch4(0x18); //Erasing done.
+				break;
+
 			case 0x13: //receive
 				Putch4(0x37);
 				increaseled();
@@ -91,17 +108,10 @@ void main(void)
 				Putch4(0x08); //Received Data.
 
 				PDR14 = 0xff;
-				for(i=0; i<size; i+=4) { /* erase */
-					if(FLASH_SectorErase(address + i) != 1) {
-						panic();
-					}
+				for(i=0; i<size; i+=2) { /* flash the data */
 					increaseled();
-				}
-
-				Putch4(0x18); //Erasing done.
-				for(i=0; i<size; i++) { /* flash the data */
-					increaseled();
-					if(FLASH_WriteHalfWord(address + (2*i), data[i]) != 1) {
+					next = (((unsigned short)data[i])<<8) | (unsigned short)data[i+1];
+					if(FLASH_WriteHalfWord(address + i, next) != 1) {
 						panic();
 					}
 				}
