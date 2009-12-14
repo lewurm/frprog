@@ -14,6 +14,22 @@ def recvByte():
 		i = tty.read()
 	return ord(i)
 
+def recvByteTO(b): #with timeout
+	j = 0
+	i = tty.read()
+	while len(i)==0 and j < 400:
+		time.sleep(0.03)
+		i = tty.read()
+		j = j + 1
+	if j == 400:
+		print "ack it!"
+		sendByte(0x23)
+		if(recvByte() != 0xaa):
+			raise Exception #ok, something really failed
+	else:
+		if(ord(i) != b):
+			raise Exception
+
 def sendByte(byte):
 	time.sleep(0.005) # just to get sure, wait 5ms
 	tty.write(chr(byte))
@@ -53,27 +69,15 @@ def pkernWRITE(address, size, data):
 	print "address:", hex(address), "size:", size
 	# send WRITE command
 	sendByte(0x13)
-	if (recvByte() != 0x37):
-		raise Exception
+	recvByteTO(0x37)
+
 	# tell desired address and size
 	sendDWord(address)
 	sendWord(size)
 
-	if (recvByte() != 0x04):
-		raise Exception
-	print "Received Metadata."
-
 	# write binary stream of data
 	for i in range(0, size):
 		sendByte(data[i])
-
-	if (recvByte() != 0x08):
-		raise Exception
-	print "Received Data."
-
-	if (recvByte() != 0x28):
-		raise Exception
-	print "Flashing done."
 
 
 class FlashSequence(object):
@@ -147,6 +151,8 @@ for seq in flashseqs:
 	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
 	pkernWRITE(seq.address, len(seq.data), seq.data)
 
-sendByte(0x99);
+#sendByte(0x99); #exit and wait
+#print "Reset your board now to run code from Flash"
 
-print "Reset your board now to run code from Flash"
+
+sendByte(0x97); #exit and restart
