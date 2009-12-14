@@ -5,7 +5,7 @@
 
 void increaseled(void)
 {
-	PDR14 = (PDR14+1)%256;
+	PDR14 = ~(((~PDR14)+1)%256);
 	HWWD_CL = 0;
 }
 
@@ -18,7 +18,8 @@ void main(void)
 
 	/*Enable LEDs*/
 	DDR14 = 0xFF;
-	PDR14 = 0xff;
+	PDR14 = 0x00;
+	increaseled();
 
 	/*Initialize UART4*/
 	InitUart4();
@@ -38,6 +39,8 @@ void main(void)
 		increaseled();
 		(void) FLASH_WriteHalfWord(baseaddr + (2*i), toflash[i]);
 	}
+
+	PDR14 = 0x55; //signal that we finished now!
 
 	while(1) {
 		HWWD_CL = 0;
