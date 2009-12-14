@@ -92,8 +92,9 @@ unsigned char FLASH_ChipErase(void)
 
 	return flag;
 }
-	
-#if 0 //maybe implement this check too!
+
+//maybe implement this check too!
+#if 0
 unsigned char FLASH_SectorBlankCheck(unsigned int secaddr, unsigned int size)
 {
 	unsigned int count;
