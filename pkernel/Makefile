@@ -35,7 +35,6 @@ LDFLAGS += -sc DATA/Data+INIT/Data+SSTACK/Data+USTACK/Data=D_RAM
 LDFLAGS += -sc IRAM/Code=ID_RAM
 LDFLAGS += -sc CODE+@INIT+@IRAM+CONST=ROM_AREA
 LDFLAGS += -sc CODE_START/Code=0x000F4000
-LDFLAGS += -sc INTVECT/Const=0x000FFC00
 LDFLAGS += -check_locate -pl 60 -pw 132 -Xals
 LDFLAGS += -Xalr -na -w 1 -Xdof -Xset_rora -cwno -a $(CPUT)
 

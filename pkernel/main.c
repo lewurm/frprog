@@ -12,32 +12,17 @@ void increaseled(void)
 void main(void)
 {
 	unsigned char error = 0;
-	unsigned char global_error = 0;	
 	unsigned int i, baseaddr;
-	unsigned int toflash[] = {0x9b00,
-								0x0d4e,
-								0xcff1,
-								0x1601,
-								0x9b05,
-								0x04c7,
-								0xc106,
-								0x1656,
-								0xe0fb}; //len = 9
+	unsigned int toflash[] = {0x9b00, 0x0d4e, 0xcff1, 0x1601, 0x9b05, 0x04c7, 0xc106, 0x1656, 0xe0fb}; //len = 9
 	
-	PORTEN = 0x3;		/* enable I/O Ports */
-				/* This feature is not supported by MB91V460A */
-                               /* For all other devices the I/O Ports must be enabled*/
+	PORTEN = 0x3; /* enable I/O Ports */
 
-	/*	Enable LEDs	*/
+	/*Enable LEDs*/
 	DDR14 = 0xFF;
 	PDR14 = 0xff;
 
-	/*	Initialize UART4	*/
+	/*Initialize UART4*/
 	InitUart4();
-
-	/*	Output Welcome Message	*/
-	Puts4(" \n\n");
- 	Puts4("\n\n********** Welcome to FUJITSU FLASH Programming Demo **********\n");
 
 #if 1
 	i = 0;
@@ -47,6 +32,7 @@ void main(void)
 		Puts4("\nerased: ");
 		Puts4(error == 1 ? "[success] " : "[failed] ");
 		Puthex4(baseaddr + i, 6);
+		increaseled();
 	}
 #endif
 	i=0;
@@ -63,6 +49,7 @@ void main(void)
 	i = 0;
 	baseaddr = 0xf4000;
 	for(; i<9; i++) {
+		increaseled();
 		Puts4("\nwrite: ");
 		error = FLASH_WriteHalfWord(baseaddr + (2*i), toflash[i]);
 		Puts4(error == 1 ? "[sucess] " : "[failed] ");
@@ -72,20 +59,8 @@ void main(void)
 		Puthex4(baseaddr + (2*i), 6);
 	}
 
-	/*	Output Ready Meassage	*/
-	if( global_error != 0 )
- 	{
-	 	Puts4("\n********* FLASH Programming Demo failed **********\n");
+	while(1) {
+		HWWD_CL = 0;
 	}
-	else
-	{
-		Puts4("\n********* FLASH Programming Demo done **********\n");
-	}
-
-    while(1)
-    {    
-         
-       HWWD_CL = 0;   
-    }   
 }
 
