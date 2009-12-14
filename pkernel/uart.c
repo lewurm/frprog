@@ -15,14 +15,6 @@ void InitUart4(void)
   // BGR04 = 1666; //  9600 Baud @ 16MHz
   // BGR04 = 832;  // 19200 Baud @ 16MHz
   BGR04 = 416;  // 38400 Baud @ 16MHz
-
-  // BGR04 = 2083; //  9600 Baud @ 20MHz
-  // BGR04 = 1041; // 19200 Baud @ 20MHz
-  // BGR04 = 520;  // 38400 Baud @ 20MHz
-
-  // BGR04 = 2499; //  9600 Baud @ 24MHz
-  // BGR04 = 1249; // 19200 Baud @ 24MHz
-  // BGR04 = 624;  // 38400 Baud @ 24MHz  
   SCR04 = 0x17;    // 8N1
   SMR04 = 0x0d;    // enable SOT3, Reset, normal mode
   SSR04 = 0x00;    // LSB first
@@ -111,7 +103,7 @@ void Putdec4(unsigned long x, int digits)
 	buf[digits]='\0';			/* end sign of string */
 	
 	for (i=digits; i>0; i--) {
-		buf[i-1] = ASCII[x % 10];
+		buf[i-1] = ASCII[x % 10]; // + '0' enough? :o
 		x = x/10;
 	}
 
