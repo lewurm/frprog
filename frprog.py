@@ -15,7 +15,6 @@ last_checksum = 0
 def sendByte(byte):
 	time.sleep(0.001) # just to get sure, wait 1ms
 	tty.write(chr(byte))
-	tty.flush()
 
 def sendWord(word):
 	sendByte(word & 0xFF)
@@ -194,6 +193,7 @@ for seq in flashseqs:
 		continue
 	print "RAMing", len(seq.data), "bytes at address", hex(addr)
 	cmdWRITE(addr, len(seq.data), seq.data)
+	tty.flush()
 
 cmdCALL(0x30000);
 sys.exit(0)

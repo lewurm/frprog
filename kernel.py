@@ -12,7 +12,6 @@ def recvByte():
 	return ord(i)
 
 def sendByte(byte):
-	time.sleep(0.005) # just to get sure, wait 5ms
 	tty.write(chr(byte))
 	tty.flush()
 
@@ -33,7 +32,6 @@ def pkernCHIPERASE():
 	print "wait..."
 	if (recvByte() != 0x23):
 		raise Exception
-	print "Chip erasing done."
 
 def pkernERASE(address, size):
 	sendByte(0x12)
@@ -43,11 +41,10 @@ def pkernERASE(address, size):
 	sendWord(size)
 	if (recvByte() != 0x18):
 		raise Exception
-	print "Erasing done."
+	#print "Erasing done."
 
 
 def pkernWRITE(address, size, data):
-	print "address:", hex(address), "size:", size
 	# send WRITE command
 	sendByte(0x13)
 	if (recvByte() != 0x37):
@@ -62,7 +59,7 @@ def pkernWRITE(address, size, data):
 
 	if (recvByte() != 0x28):
 		raise Exception
-	print "Flashing done."
+	#print "Flashing done."
 
 
 class FlashSequence(object):
@@ -117,9 +114,9 @@ for line in fp:
 		# add flash sequence to our list
 		flashseqs.append(FlashSequence(address, data))
 
-print "The following flash sequences have been read in:"
-for seq in flashseqs:
-	print hex(seq.address) + ":", [hex(x) for x in seq.data]
+#print "The following flash sequences have been read in:"
+#for seq in flashseqs:
+#	print hex(seq.address) + ":", [hex(x) for x in seq.data]
 
 
 # let the fun begin!
@@ -130,11 +127,20 @@ for seq in flashseqs:
 """
 print "ChipErase..."
 pkernCHIPERASE()
+print "Chip erasing done."
 
 
+print "Flashing",
 for seq in flashseqs:
-	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
+	sys.stdout.write(".")
+	sys.stdout.flush()
+	# skip seqs only consisting of 0xffs
+	seqset = list(set(seq.data))
+	if len(seqset) == 1 and seqset[0] == 0xff:
+		continue
+	#print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
 	pkernWRITE(seq.address, len(seq.data), seq.data)
+print
 
 """
 sendByte(0x99) #exit and wait
