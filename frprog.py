@@ -107,13 +107,43 @@ def cmdBAUDRATE(baudrate):
 	# send desired baudrate
 	sendDWord(baudrate)
 
+
 class FlashSequence(object):
 	def __init__(self, address, data):
 		self.address = address
 		self.data = data
 
-# list of all our address/data pairs to flash
-flashseqs = []
+def read_mhx_file(fp): # needs a file handle to the desired mhx file
+	retval = [] # returns a list of FlashSequence objects
+	linecount = 0
+	for line in fp:
+		linecount += 1
+		# get rid of newline characters
+		line = line.strip()
+
+		# we're only interested in S2 (data sequence with 3 address bytes) records by now
+		if line[0:2] == "S2":
+			byte_count = int(line[2:4], 16)
+			# just to get sure, check if byte count field is valid
+			if (len(line)-4) != (byte_count*2):
+				print sys.argv[0] + ": Warning - inavlid byte count field in " + \
+					sys.argv[1] + ":" + str(linecount) + ", skipping line!"
+				continue
+
+			# address and checksum bytes are not needed
+			byte_count -= 4
+			address = int(line[4:10], 16)
+			datastr = line[10:10+byte_count*2]
+
+			# convert data hex-byte-string to real byte data list
+			data = []
+			for i in range(0, len(datastr)/2):
+				data.append(int(datastr[2*i:2*i+2], 16))
+
+			# add flash sequence to our list
+			retval.append(FlashSequence(address, data))
+	return retval
+
 
 # check command line arguments
 if len(sys.argv) != 2:
@@ -127,38 +157,13 @@ except IOError:
 	print sys.argv[0] + ": Error - couldn't open file " + sys.argv[1] + "!"
 	sys.exit(1)
 
-linecount = 0
-for line in fp:
-	linecount += 1
-	# get rid of newline characters
-	line = line.strip()
-
-	# we're only interested in S2 (data sequence with 3 address bytes) records by now
-	if line[0:2] == "S2":
-		byte_count = int(line[2:4], 16)
-		# just to get sure, check if byte count field is valid
-		if (len(line)-4) != (byte_count*2):
-			print sys.argv[0] + ": Warning - inavlid byte count field in " + \
-				sys.argv[1] + ":" + str(linecount) + ", skipping line!"
-			continue
-
-		# address and checksum bytes are not needed
-		byte_count -= 4
-		address = int(line[4:10], 16)
-		datastr = line[10:10+byte_count*2]
-
-		# convert data hex-byte-string to real byte data list
-		data = []
-		for i in range(0, len(datastr)/2):
-			data.append(int(datastr[2*i:2*i+2], 16))
-
-		# add flash sequence to our list
-		flashseqs.append(FlashSequence(address, data))
+# get list of all our address/data pairs to flash
+flashseqs = read_mhx_file(fp)
+fp.close()
 
 print "The following flash sequences have been read in:"
 for seq in flashseqs:
 	print hex(seq.address) + ":", seq.data
-
 
 print "Initializing serial port..."
 tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
