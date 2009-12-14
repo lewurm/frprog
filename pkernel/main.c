@@ -3,35 +3,128 @@
 
 #pragma section CODE=IRAM,attr=CODE
 
-void increaseled(void)
+#define BUFSIZE 0x20
+#define cleardata() memset(data,0,BUFSIZE)
+
+static void increaseled(void)
 {
 	PDR14 = ~(((~PDR14)+1)%256);
 	HWWD_CL = 0;
 }
 
+static unsigned char recvbyte(void)
+{
+	return Getch4();
+}
+
+static unsigned short recvword(void)
+{
+	static unsigned char b1, b2;
+	static unsigned int ret;
+	b1 = recvbyte();
+	b2 = recvbyte();
+	ret = (b2 << 8) | b1;
+	return ret;
+}
+
+static unsigned int recvdword(void)
+{
+	static unsigned char b1, b2, b3, b4;
+	static unsigned int ret;
+	b1 = recvbyte();
+	b2 = recvbyte();
+	b3 = recvbyte();
+	b4 = recvbyte();
+	ret = (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
+	return ret;
+}
+
+static void halt(void)
+{
+	while(1) {
+		HWWD_CL = 0;
+	}
+}
+
+static void panic(void)
+{
+	PDR14 = 0xff;
+	PDR14 = 0x22;
+	halt();
+}
+
 void main(void)
 {
-	unsigned int i, baseaddr;
-	unsigned int toflash[] = {0x9b00, 0x0d4e, 0xcff1, 0x1601, 0x9b05, 0x04c7, 0xc106, 0x1656, 0xe0fb}; //len = 9
+	unsigned int address;
+	unsigned short i, size;
+	unsigned char running = 1, data[BUFSIZE] = {0};
 	
 	PORTEN = 0x3; /* enable I/O Ports */
 
 	/*Enable LEDs*/
 	DDR14 = 0xFF;
-	PDR14 = 0x00;
-	increaseled();
+	PDR14 = 0xff;
 
 	/*Initialize UART4*/
 	InitUart4();
 
-#if 1
+	while(running) {
+		cleardata();
+		increaseled();
+		switch(recvbyte()) {
+			case 0x13: //receive
+				Putch4(0x37);
+				increaseled();
+
+				address = recvdword();
+				increaseled();
+
+				size = recvword();
+				increaseled();
+
+				Putch4(0x04); //Received Metadata.
+				PDR14 = 0xff;
+				for(i=0; i<size; i++) { /* get data */
+					increaseled();
+					data[i] = recvbyte();
+				}
+				Putch4(0x08); //Received Data.
+
+				PDR14 = 0xff;
+				for(i=0; i<size; i+=4) { /* erase */
+					if(FLASH_SectorErase(address + i) != 1) {
+						panic();
+					}
+					increaseled();
+				}
+
+				Putch4(0x18); //Erasing done.
+				for(i=0; i<size; i++) { /* flash the data */
+					increaseled();
+					if(FLASH_WriteHalfWord(address + (2*i), data[i]) != 1) {
+						panic();
+					}
+				}
+				Putch4(0x28); //Flashing done.
+				break;
+
+			case 0x99: /* exit */
+				running = 0;
+				break;
+			default: break;
+		}
+	}
+
+	PDR14 = 0x55; //signal that we finished now!
+	halt();
+
+#if 0
 	i = 0;
 	baseaddr = 0xf4000;
 	for (; i <0x10; i+=4) {
 		(void) FLASH_SectorErase(baseaddr + i);
 		increaseled();
 	}
-#endif
 
 	i = 0;
 	baseaddr = 0xf4000;
@@ -40,14 +133,6 @@ void main(void)
 		(void) FLASH_WriteHalfWord(baseaddr + (2*i), toflash[i]);
 	}
 
-	PDR14 = 0x55; //signal that we finished now!
-
-#if 1
-	while(1) {
-		HWWD_CL = 0;
-	}
-#else
-	//let restart it
 #endif
 }
 

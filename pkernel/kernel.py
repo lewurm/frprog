@@ -7,25 +7,69 @@ DEVICE="/dev/ttyUSB0"
 # baudrate used for communication with pkernel
 KERNEL_BAUDRATE=38400
 
+def recvByte():
+	i = tty.read()
+	while len(i)==0:
+		time.sleep(0.01)
+		i = tty.read()
+	return ord(i)
+
+def sendByte(byte):
+	time.sleep(0.501) # just to get sure, wait 1ms
+	tty.write(chr(byte))
+	tty.flush()
+
+def sendWord(word):
+	sendByte(word & 0xFF)
+	sendByte((word >> 8) & 0xFF)
+
+def sendDWord(dword):
+	sendByte(dword & 0xFF)
+	sendByte((dword >> 8) & 0xFF)
+	sendByte((dword >> 16) & 0xFF)
+	sendByte((dword >> 24) & 0xFF)
+
 def pkernWRITE(address, size, data):
+	print "address:", hex(address), "size:", size
 	# send WRITE command
-	sendByte(0x01)
-	if (recvByte() != 0xF1):
-		raise Exception
-	sendByte(0x03)
-	if (recvByte() != 0x83):
+	sendByte(0x13)
+	if (recvByte() != 0x37):
 		raise Exception
 	# tell desired address and size
 	sendDWord(address)
 	sendWord(size)
+	if (recvByte() != 0x04):
+		raise Exception
+	print "Received Metadata."
+
 	# write binary stream of data
 	for i in range(0, size):
 		sendByte(data[i])
-	# get checksum
-	recvChecksum()
+
+	if (recvByte() != 0x08):
+		raise Exception
+	print "Received Data."
+
+	if (recvByte() != 0x18):
+		raise Exception
+	print "Erasing done."
+
+	if (recvByte() != 0x28):
+		raise Exception
+	print "Flashing done."
+
+
+class FlashSequence(object):
+	def __init__(self, address, data):
+		self.address = address
+		self.data = data
+
+# list of all our address/data pairs to flash
+flashseqs = []
+
 
 print "Initializing serial port..."
-tty = SerialPort(DEVICE, 500, KERNEL_BAUDRATE)
+tty = SerialPort(DEVICE, 0, KERNEL_BAUDRATE)
 
 # check command line arguments
 if len(sys.argv) != 2:
@@ -76,5 +120,7 @@ for seq in flashseqs:
 for seq in flashseqs:
 	print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
 	pkernWRITE(seq.address, len(seq.data), seq.data)
+
+sendByte(0x99);
 
 print "Reset your board now to run code from Flash"
