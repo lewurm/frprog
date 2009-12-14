@@ -544,36 +544,6 @@ gearUpLoop:
 #endif
 noClockStartup:
         ClearRCwatchdog
-
-;=========================================================================================
-; Standard C startup
-;=========================================================================================
-;=========================================================================================
-; 7.10  Clear data 
-;=========================================================================================
-; clear DATA section
-; According to ANSI, the DATA section must be cleared during start-up
-        LDI:8           #0, R0
-        LDI             #sizeof DATA &~0x3, R1
-        LDI             #DATA, R13
-        CMP             #0, R1
-        BEQ             data_clr1
-data_clr0:
-        ADD2            #-4, R1
-        BNE:D           data_clr0
-        ST              R0, @(R13, R1)
-data_clr1:
-        LDI:8           #sizeof DATA & 0x3, R1
-        LDI             #DATA + (sizeof DATA & ~0x3), R13
-
-        CMP             #0, R1
-        BEQ             data_clr_end
-data_clr2:
-        ADD2            #-1, R1
-        BNE:D           data_clr2
-        STB             R0, @(R13, R1)
-data_clr_end:
-        ClearRCwatchdog
         
 start_main:
 ;=========================================================================================
