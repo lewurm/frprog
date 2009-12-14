@@ -1,7 +1,6 @@
 #include "mb91465k.h"
 
 #pragma section CODE=IRAM,attr=CODE
-const char ASCII[] = "0123456789ABCDEF";
 
 void InitUart4(void)
 {
@@ -34,56 +33,5 @@ unsigned char Getch4(void) /* waits for and returns incomming char 	*/
 			return (ch); /* return char*/
 		}
 	}
-}
-
-
-void Puts4(const char *Name2)
-{
-	volatile int i,len;
-	len = strlen(Name2);
-	
-	for(i=0; i<strlen(Name2); i++) {
-	if(Name2[i] == 10)
-		Putch4(13);
-	Putch4(Name2[i]);
-	}
-}
-
-
-void Puthex4(unsigned long n, unsigned char digits)
-{
-	unsigned char digit=0,div=0,i;
-
-	div=(4*(digits-1));	/* init shift divisor */
-	for (i=0;i<digits;i++) {
-		digit = ((n >> div)&0xF); /* get hex-digit value */
-		Putch4(digit + ((digit < 0xA) ? '0' : 'A' - 0xA));
-		div-=4; /* next digit shift */
-	}
-}
-
-void Putdec4(unsigned long x, int digits)
-{
-	int i;
-	char buf[10],sign=1;
-	
-	if (digits < 0) {     /* should be print of zero? */
-		digits *= (-1);
-		sign =1;
-	}  
-	buf[digits]='\0';			/* end sign of string */
-	
-	for (i=digits; i>0; i--) {
-		buf[i-1] = ASCII[x % 10]; // + '0' enough? :o
-		x = x/10;
-	}
-
-	if (sign) {
-		for (i=0; buf[i]=='0'; i++) { /* no print of zero */
-			if ( i<digits-1)
-				buf[i] = ' ';
-		}
-	}
-	Puts4(buf); /* send string */
 }
 
