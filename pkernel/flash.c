@@ -8,8 +8,6 @@
 #include "flash.h"
 #include "mb91465k.h"
 
-static unsigned int IFlag;
-
 void FLASH_PrepareWriteHalfWordMode()
 {
 	/*	Set FLASH Access Mode via BootROM Routine	*/
@@ -64,9 +62,6 @@ unsigned char FLASH_ChipErase(void)
 {
 	unsigned char flag = 0;
 
-	/*Disable Interrupts if necessary*/
-	IFlag = FLASH_SaveDisableInterruptFlag();
-
 	/*Set FLASH access mode to 16Bit Write Mode*/
 	FLASH_PrepareWriteHalfWordMode();
 
@@ -102,9 +97,6 @@ unsigned char FLASH_ChipErase(void)
 	/*Set FLASH access mode to 32Bit Read Mode*/
 	FLASH_PrepareReadMode();
 
-	/*Restore the original Interrupt Flag*/
-	FLASH_RestoreInterruptFlag(IFlag);
-
 	return flag;
 }
 	
@@ -113,9 +105,6 @@ unsigned char FLASH_SectorErase(unsigned int secadr)
 	unsigned char flag = 0;
 	volatile unsigned int value = 0;
 	
-	/*	Disable Interrupts if necessary	*/
-	IFlag = FLASH_SaveDisableInterruptFlag();
-
 	/*	Set FLASH access mode to 16Bit Write Mode	*/
 	FLASH_PrepareWriteHalfWordMode();
 					
@@ -144,14 +133,8 @@ unsigned char FLASH_SectorErase(unsigned int secadr)
 	        /*	Set FLASH access mode to 32Bit Read Mode	*/
 	        FLASH_PrepareReadMode();
 			
-			/*	Restore the original Interrupt Flag	*/
-			FLASH_RestoreInterruptFlag(IFlag);
-						
 			/*	Keep on checking for pending Interrupts	*/
 			while( FLASH_CheckPendingInterrupt() ) HWWD_CL = 0;
-			
-			/*	Disable Interrupts if necessary	*/
-			IFlag = FLASH_SaveDisableInterruptFlag();
 			
 			/*	Set FLASH access mode to 16Bit Write Mode	*/
 	        FLASH_PrepareWriteHalfWordMode();
@@ -176,14 +159,8 @@ unsigned char FLASH_SectorErase(unsigned int secadr)
 	        /*	Set FLASH access mode to 32Bit Read Mode	*/
 	        FLASH_PrepareReadMode();
     					
-			/*	Restore the original Interrupt Flag	*/
-			FLASH_RestoreInterruptFlag(IFlag);
-									
 			/*	Keep on checking for pending Interrupts	*/
 			while( FLASH_CheckPendingInterrupt() ) HWWD_CL = 0;
-
-			/*	Disable Interrupts if necessary	*/
-			IFlag = FLASH_SaveDisableInterruptFlag();
 			
 			/*	Set FLASH access mode to 16Bit Write Mode	*/
 	        FLASH_PrepareWriteHalfWordMode();
@@ -213,11 +190,6 @@ unsigned char FLASH_SectorErase(unsigned int secadr)
 			}
 		}
 	}
-	
-
-	/*	Restore the original Interrupt Flag	*/
-	FLASH_RestoreInterruptFlag(IFlag);
-	
 	/*	Set FLASH access mode to 32Bit Read Mode	*/
 	FLASH_PrepareReadMode();
 		
@@ -256,9 +228,6 @@ unsigned char FLASH_WriteHalfWord(unsigned int adr, unsigned short int data)
 {
 	unsigned char flag = 0;
 
-	/*	Disable Interrupts if necessary	*/
-	IFlag = FLASH_SaveDisableInterruptFlag();
-			
 	/*	Set FLASH access mode to 16Bit Write Mode	*/
 	FLASH_PrepareWriteHalfWordMode();
 	
@@ -297,9 +266,6 @@ unsigned char FLASH_WriteHalfWord(unsigned int adr, unsigned short int data)
 	/*	Set FLASH access mode to 32Bit Read Mode	*/
 	FLASH_PrepareReadMode();
 	
-	/*	Restore the original Interrupt Flag	*/
-	FLASH_RestoreInterruptFlag(IFlag);
-	
 	return flag;
 }
 
@@ -310,28 +276,6 @@ unsigned char FLASH_ReadReset()
 	
 	return 1;
 }
-
-#pragma asm
-_FLASH_SaveDisableInterruptFlag:
-	STM0 (R0)
-	MOV PS,R4
-	LDI	#0x00000010,R0	
-	AND R0,R4			; Store Original Flag
-	ANDCCR #0xFFFFFFEF	; Clear Interrupt Flag
-	LDM0 (R0)	
-	RET
-#pragma endasm
-
-
-#pragma asm
-_FLASH_RestoreInterruptFlag:
-	STM0 (R0)
-	MOV PS,R0			; Get current PS
-	OR R4,R0			; Set Flag as saved
-	MOV R0,PS			; Write back PS
-	LDM0 (R0)
-	RET
-#pragma endasm
 
 
 unsigned char FLASH_SuspendSectorErase(unsigned int secaddr)
