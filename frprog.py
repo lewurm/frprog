@@ -6,8 +6,10 @@ from SerialPort_linux import *
 DEVICE="/dev/ttyUSB0"
 # baudrate used for initialization
 INIT_BAUDRATE=9600
-# baudrate used for communication after init
-REAL_BAUDRATE=38400
+# baudrate used for communication with the internal bootloader after init
+BOOTLOADER_BAUDRATE=38400
+# baudrate used for communication with the pkernel program that does the flashing eventually
+KERNEL_BAUDRATE=115200
 
 # contains the last received checksum from a READ, WRITE or CHECKSUM command
 last_checksum = 0
@@ -107,6 +109,40 @@ def cmdBAUDRATE(baudrate):
 	# send desired baudrate
 	sendDWord(baudrate)
 
+def pkernCHIPERASE():
+	sendByte(0x15)
+	if (recvByte() != 0x45):
+		raise Exception
+	# wait till completion...
+	if (recvByte() != 0x23):
+		raise Exception
+
+def pkernERASE(address, size):
+	sendByte(0x12)
+	if (recvByte() != 0x11):
+		raise Exception
+	sendDWord(address)
+	sendWord(size)
+	if (recvByte() != 0x18):
+		raise Exception
+
+
+def pkernWRITE(address, size, data):
+	# send WRITE command
+	sendByte(0x13)
+	if (recvByte() != 0x37):
+		raise Exception
+	# tell desired address and size
+	sendDWord(address)
+	sendWord(size)
+
+	# write binary stream of data
+	for i in range(0, size):
+		sendByte(data[i])
+
+	if (recvByte() != 0x28):
+		raise Exception
+
 
 class FlashSequence(object):
 	def __init__(self, address, data):
@@ -148,27 +184,24 @@ def readMHXFile(filename): # desired mhx filename
 
 
 # check command line arguments
-if len(sys.argv) != 2:
-	print "Usage: " + sys.argv[0] + " [mhx-file]"
+if len(sys.argv) != 3:
+	print "Usage: " + sys.argv[0] + " [pkernel mhx-file] [target mhx-file]"
 	sys.exit(1)
 
-# read in data from mhx-file before starting
+# read in data from mhx-files before starting
 try:
-	flashseqs = readMHXFile(sys.argv[1])
+	bootloaderseqs = readMHXFile(sys.argv[1])
+	pkernelseqs = readMHXFile(sys.argv[2])
 except IOError as error:
 	print sys.argv[0] + ": Error - couldn't open file " + error.filename + "!"
 	sys.exit(1)
 
-print "The following flash sequences have been read in:"
-for seq in flashseqs:
-	print hex(seq.address) + ":", seq.data
-
 print "Initializing serial port..."
 tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
 
-print "Please press RESET on your 1337 board..."
+print "Please press RESET on your board..."
 
-while 1:
+while True:
 	tty.write('V')
 	tty.flush()
 	try: 
@@ -180,22 +213,49 @@ while 1:
 
 print "OK, trying to set baudrate..."
 # set baudrate
-cmdBAUDRATE(REAL_BAUDRATE)
-tty = SerialPort(DEVICE, 100, REAL_BAUDRATE)
+cmdBAUDRATE(BOOTLOADER_BAUDRATE)
+tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
 
+print "Transfering pkernel program to IRAM",
 # let the fun begin!
-for seq in flashseqs:
+for seq in bootloaderseqs:
 	if(seq.address <= 0x40000):
 		addr = seq.address
 	else:
 		continue
-	print "RAMing", len(seq.data), "bytes at address", hex(addr)
+	#print "RAMing", len(seq.data), "bytes at address", hex(addr)
 	cmdWRITE(addr, len(seq.data), seq.data)
 	tty.flush()
+	sys.stdout.write(".")
+	sys.stdout.flush()
+print
 
-cmdCALL(0x30000);
-sys.exit(0)
+# execute our pkernel finally and set pkernel conform baudrate
+cmdCALL(0x30000)
+time.sleep(0.5) # just to get sure that the pkernel is really running!
+del tty
+tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
 
+print "Performing ChipErase..."
+pkernCHIPERASE()
+print "Chip erasing done."
+
+print "Flashing",
+for seq in pkernelseqs:
+	# skip seqs only consisting of 0xffs
+	seqset = list(set(seq.data))
+	if len(seqset) == 1 and seqset[0] == 0xff:
+		continue
+	#print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
+	pkernWRITE(seq.address, len(seq.data), seq.data)
+	tty.flush()
+	sys.stdout.write(".")
+	sys.stdout.flush()
+print
+print "Flashing done."
+
+sendByte(0x97) # exit and restart
+print "Program was started. Have fun!"
 
 # some tests here.......
 """
