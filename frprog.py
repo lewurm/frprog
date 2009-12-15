@@ -210,6 +210,8 @@ while True:
 		# timeout happened, who cares ;-)
 		pass
 
+starttime = time.time() # save time at this point for evaluating the duration at the end
+
 print "OK, trying to set baudrate..."
 # set baudrate
 bootromBAUDRATE(BOOTLOADER_BAUDRATE)
@@ -239,7 +241,6 @@ tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
 
 print "Performing ChipErase..."
 pkernCHIPERASE()
-print "Chip erasing done."
 
 print "Flashing",
 for seq in pkernelseqs:
@@ -253,7 +254,9 @@ for seq in pkernelseqs:
 	sys.stdout.write(".")
 	sys.stdout.flush()
 print
-print "Flashing done."
+
+duration = time.time() - starttime
+print "Procedure complete, took", round(duration, 2), "seconds."
 
 sendByte(0x97) # exit and restart
 print "Program was started. Have fun!"
