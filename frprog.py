@@ -233,9 +233,8 @@ print
 
 # execute our pkernel finally and set pkernel conform baudrate
 cmdCALL(0x30000)
-time.sleep(0.5) # just to get sure that the pkernel is really running!
+time.sleep(0.1) # just to get sure that the pkernel is really running!
 del tty
-pkernelmode = True
 tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
 
 print "Performing ChipErase..."
