@@ -13,9 +13,12 @@ KERNEL_BAUDRATE=115200
 
 # contains the last received checksum from a READ, WRITE or CHECKSUM command
 last_checksum = 0
+# is set to True if we are already communicating with the pkernel
+pkernelmode = False
 
 def sendByte(byte):
-	time.sleep(0.001) # just to get sure, wait 1ms
+	if pkernelmode == False:
+		time.sleep(0.001) # just to get sure, wait 1ms
 	tty.write(chr(byte))
 
 def sendWord(word):
@@ -234,6 +237,7 @@ print
 cmdCALL(0x30000)
 time.sleep(0.5) # just to get sure that the pkernel is really running!
 del tty
+pkernelmode = True
 tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
 
 print "Performing ChipErase..."
