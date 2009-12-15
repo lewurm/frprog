@@ -13,12 +13,8 @@ KERNEL_BAUDRATE=115200
 
 # contains the last received checksum from a READ, WRITE or CHECKSUM command
 last_checksum = 0
-# is set to True if we are already communicating with the pkernel
-pkernelmode = False
 
 def sendByte(byte):
-	if pkernelmode == False:
-		time.sleep(0.001) # just to get sure, wait 1ms
 	tty.write(chr(byte))
 
 def sendWord(word):
@@ -217,6 +213,8 @@ while True:
 print "OK, trying to set baudrate..."
 # set baudrate
 cmdBAUDRATE(BOOTLOADER_BAUDRATE)
+time.sleep(0.1) # just to get sure that the bootloader is really running in new baudrate mode!
+del tty
 tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
 
 print "Transfering pkernel program to IRAM",
