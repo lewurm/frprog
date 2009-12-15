@@ -35,7 +35,7 @@ def recvChecksum():
 	last_checksum = recvByte()
 	last_checksum |= (recvByte() << 8)
 
-def cmdREAD(address, size):
+def bootromREAD(address, size):
 	# send READ command
 	sendByte(0x01)
 	if (recvByte() != 0xF1):
@@ -54,7 +54,7 @@ def cmdREAD(address, size):
 	recvChecksum()
 	return data
 
-def cmdWRITE(address, size, data):
+def bootromWRITE(address, size, data):
 	# send WRITE command
 	sendByte(0x01)
 	if (recvByte() != 0xF1):
@@ -72,7 +72,7 @@ def cmdWRITE(address, size, data):
 	recvChecksum()
 
 # TODO: test this function!
-def cmdCALL(address):
+def bootromCALL(address):
 	# send CALL command
 	sendByte(0x01)
 	if (recvByte() != 0xF1):
@@ -86,7 +86,7 @@ def cmdCALL(address):
 	#return recvByte()
 
 # TODO: test this function!
-def cmdCHECKSUM():
+def bootromCHECKSUM():
 	# call CHECKSUM command
 	sendByte(0x01)
 	if (recvByte() != 0xF1):
@@ -97,7 +97,7 @@ def cmdCHECKSUM():
 	# get checksum
 	recvChecksum()
 
-def cmdBAUDRATE(baudrate):
+def bootromBAUDRATE(baudrate):
 	# send BAUDRATE command
 	sendByte(0x01)
 	if (recvByte() != 0xF1):
@@ -212,7 +212,7 @@ while True:
 
 print "OK, trying to set baudrate..."
 # set baudrate
-cmdBAUDRATE(BOOTLOADER_BAUDRATE)
+bootromBAUDRATE(BOOTLOADER_BAUDRATE)
 time.sleep(0.1) # just to get sure that the bootloader is really running in new baudrate mode!
 del tty
 tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
@@ -225,14 +225,14 @@ for seq in bootloaderseqs:
 	else:
 		continue
 	#print "RAMing", len(seq.data), "bytes at address", hex(addr)
-	cmdWRITE(addr, len(seq.data), seq.data)
+	bootromWRITE(addr, len(seq.data), seq.data)
 	tty.flush()
 	sys.stdout.write(".")
 	sys.stdout.flush()
 print
 
 # execute our pkernel finally and set pkernel conform baudrate
-cmdCALL(0x30000)
+bootromCALL(0x30000)
 time.sleep(0.1) # just to get sure that the pkernel is really running!
 del tty
 tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
