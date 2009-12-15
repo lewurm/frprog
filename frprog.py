@@ -113,7 +113,8 @@ class FlashSequence(object):
 		self.address = address
 		self.data = data
 
-def readMHXFile(fp): # needs a file handle to the desired mhx file
+def readMHXFile(filename): # desired mhx filename
+	fp = open(filename, "r")
 	retval = [] # returns a list of FlashSequence objects
 	linecount = 0
 	for line in fp:
@@ -142,6 +143,7 @@ def readMHXFile(fp): # needs a file handle to the desired mhx file
 
 			# add flash sequence to our list
 			retval.append(FlashSequence(address, data))
+	fp.close()
 	return retval
 
 
@@ -152,12 +154,10 @@ if len(sys.argv) != 2:
 
 # read in data from mhx-file before starting
 try:
-	fp = open(sys.argv[1], "r")
-except IOError:
-	print sys.argv[0] + ": Error - couldn't open file " + sys.argv[1] + "!"
+	flashseqs = readMHXFile(sys.argv[1])
+except IOError as error:
+	print sys.argv[0] + ": Error - couldn't open file " + error.filename + "!"
 	sys.exit(1)
-flashseqs = readMHXFile(fp)
-fp.close()
 
 print "The following flash sequences have been read in:"
 for seq in flashseqs:
