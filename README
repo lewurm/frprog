@@ -1,1 +1,58 @@
-insert $README here ;)
+What is frprog?
+frprog is a programmer written in python for programming an microcontroller of
+the FR Family by Fujitsu. It also includes a simple "kernel" (lets name it
+"pkernel") for communication to the PC, since the BootROM isn't able to modify
+the flash.
+
+
+Why?
+There are only programmers available on Windows.
+And Windows sucks, in particular we hate the clickage every time we want to
+flash a programm on the board. Sadly we don't have a monkey to do this job for
+us.
+
+
+Usage:
+> frprog [target mhx-file]
+where the target file must be a vaild MHX output of the Softune linker. frprog
+will instruct you through the process then.
+(We also build up a simple Makefile which calls their compiler, assembler, ...
+through wine, so we actually don't rely on Windows for our work :) Contact
+us if you are interested!)
+
+
+Supported Microcontroller:
+o MB91F465X (you find this controller in the "bits pot blue" board by Fujitsu)
+
+
+Installation:
+Do the common trick
+> make && sudo make install
+to install it. In case, adjust $PREFIX in the Makefile.
+
+For zsh-users, add this to your .zshrc:
+> _frprog() {
+> 	_files -J files -g '*.(#i)mhx(.)'
+> }
+> compdef _frprog frprog
+
+
+ToDo:
+o use checksum for transmission
+o verify flash
+o <insert your idea here>
+
+feel free to contribute!
+
+
+License and Disclaimer:
+GPL2 of course and YOU USE THIS PROGRAM ON YOUR OWN
+RISK ...
+
+
+Credits:
+Sebastian "theStack" Falbesoner // sebastian.falbesoner _AT_ gmail _DOT_ com
+Bernhard "lewurm" Urban // lewurm _AT_ gmail _DOT_ com
+
+Thanks to Holger for his value hints (check out also his featurerich programmer
+"FLASHly" http://home.arcor.de/ho/holger.wech/elektronik/ for Windows)

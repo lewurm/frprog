@@ -183,14 +183,17 @@ def readMHXFile(filename): # desired mhx filename
 
 
 # check command line arguments
-if len(sys.argv) != 3:
-	print "Usage: " + sys.argv[0] + " [pkernel mhx-file] [target mhx-file]"
+if len(sys.argv) != 2:
+	print "Usage: " + sys.argv[0] + " [target mhx-file]"
 	sys.exit(1)
 
 # read in data from mhx-files before starting
 try:
-	bootloaderseqs = readMHXFile(sys.argv[1])
-	pkernelseqs = readMHXFile(sys.argv[2])
+	try:
+		bootloaderseqs = readMHXFile("pkernel/pkernel.mhx")
+	except IOError as error1:
+		bootloaderseqs = readMHXFile("%PREFIX%/share/frprog/pkernel.mhx")
+	pkernelseqs = readMHXFile(sys.argv[1])
 except IOError as error:
 	print sys.argv[0] + ": Error - couldn't open file " + error.filename + "!"
 	sys.exit(1)
