@@ -1,9 +1,8 @@
 What is frprog?
-frprog is a programmer written in python for programming an microcontroller of
-the FR Family by Fujitsu. It also includes a simple "kernel" (lets name it
+frprog is a programmer written in Python for programming a microcontroller of
+the FR Family by Fujitsu. It also includes a simple "kernel" (let's name it
 "pkernel") for communication to the PC, since the BootROM isn't able to modify
 the flash.
-
 
 Why?
 There are only programmers available on Windows.
@@ -14,11 +13,11 @@ us.
 
 Usage:
 > frprog [target mhx-file]
-where the target file must be a vaild MHX output of the Softune linker. frprog
-will instruct you through the process then.
-(We also build up a simple Makefile which calls their compiler, assembler, ...
-through wine, so we actually don't rely on Windows for our work :) Contact
-us if you are interested!)
+where the target file must be a valid MHX output of the Softune linker / f2ms
+converter. frprog will instruct you through the process then.
+(We also built up a simple Makefile which calls their toolchain through wine,
+so we actually don't rely on Windows for our work :) Contact us if you are
+interested!)
 
 
 Supported Microcontroller:
@@ -40,6 +39,7 @@ For zsh-users, add this to your .zshrc:
 ToDo:
 o use checksum for transmission
 o verify flash
+o maybe test/port frprog to other platforms if there's enough interest
 o <insert your idea here>
 
 feel free to contribute!
@@ -54,5 +54,11 @@ Credits:
 Sebastian "theStack" Falbesoner // sebastian.falbesoner _AT_ gmail _DOT_ com
 Bernhard "lewurm" Urban // lewurm _AT_ gmail _DOT_ com
 
-Thanks to Holger for his value hints (check out also his featurerich programmer
-"FLASHly" http://home.arcor.de/ho/holger.wech/elektronik/ for Windows)
+Serial port access is performed via USPP ("Universal Serial Port Python
+Library"), a multi-platform Python module written by Isaac Barona (see
+http://sites.google.com/site/ibarona/uspp). Thanks for providing such a
+comfortable tty interface!
+
+Thanks to Holger Wech for his valuable hints (check out also his featurerich
+programmer "FLASHly" http://home.arcor.de/ho/holger.wech/elektronik/ for
+Windows)
