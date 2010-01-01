@@ -14,6 +14,11 @@ KERNEL_BAUDRATE=115200
 # contains the last received checksum from a READ, WRITE or CHECKSUM command
 last_checksum = 0
 
+class FlashSequence(object):
+	def __init__(self, address, data):
+		self.address = address
+		self.data = data
+
 def sendByte(byte):
 	tty.write(chr(byte))
 
@@ -125,7 +130,6 @@ def pkernERASE(address, size):
 	if (recvByte() != 0x18):
 		raise Exception
 
-
 def pkernWRITE(address, size, data):
 	# send WRITE command
 	sendByte(0x13)
@@ -141,12 +145,6 @@ def pkernWRITE(address, size, data):
 
 	if (recvByte() != 0x28):
 		raise Exception
-
-
-class FlashSequence(object):
-	def __init__(self, address, data):
-		self.address = address
-		self.data = data
 
 def readMHXFile(filename): # desired mhx filename
 	fp = open(filename, "r")
@@ -181,85 +179,91 @@ def readMHXFile(filename): # desired mhx filename
 	fp.close()
 	return retval
 
+def main(argv=None):
+	# check command line arguments
+	if argv is None:
+		argv = sys.argv
+	if len(argv) != 2:
+		print "Usage: " + argv[0] + " [target mhx-file]"
+		return 1
 
-# check command line arguments
-if len(sys.argv) != 2:
-	print "Usage: " + sys.argv[0] + " [target mhx-file]"
-	sys.exit(1)
-
-# read in data from mhx-files before starting
-try:
+	# read in data from mhx-files before starting
 	try:
-		bootloaderseqs = readMHXFile("pkernel/pkernel.mhx")
-	except IOError as error1:
-		bootloaderseqs = readMHXFile("%PREFIX%/share/frprog/pkernel.mhx")
-	pkernelseqs = readMHXFile(sys.argv[1])
-except IOError as error:
-	print sys.argv[0] + ": Error - couldn't open file " + error.filename + "!"
-	sys.exit(1)
+		try:
+			bootloaderseqs = readMHXFile("pkernel/pkernel.mhx")
+		except IOError as error1:
+			bootloaderseqs = readMHXFile("%PREFIX%/share/frprog/pkernel.mhx")
+		pkernelseqs = readMHXFile(argv[1])
+	except IOError as error:
+		print argv[0] + ": Error - couldn't open file " + error.filename + "!"
+		return 1
 
-print "Initializing serial port..."
-tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
+	print "Initializing serial port..."
+	tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
 
-print "Please press RESET on your board..."
+	print "Please press RESET on your board..."
 
-while True:
-	tty.write('V')
-	tty.flush()
-	try: 
-		if tty.read() == 'F':
-			break
-	except SerialPortException: 
-		# timeout happened, who cares ;-)
-		pass
+	while True:
+		tty.write('V')
+		tty.flush()
+		try:
+			if tty.read() == 'F':
+				break
+		except SerialPortException:
+			# timeout happened, who cares ;-)
+			pass
 
-starttime = time.time() # save time at this point for evaluating the duration at the end
+	starttime = time.time() # save time at this point for evaluating the duration at the end
 
-print "OK, trying to set baudrate..."
-# set baudrate
-bootromBAUDRATE(BOOTLOADER_BAUDRATE)
-time.sleep(0.1) # just to get sure that the bootloader is really running in new baudrate mode!
-del tty
-tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
+	print "OK, trying to set baudrate..."
+	# set baudrate
+	bootromBAUDRATE(BOOTLOADER_BAUDRATE)
+	time.sleep(0.1) # just to get sure that the bootloader is really running in new baudrate mode!
+	del tty
+	tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
 
-print "Transfering pkernel program to IRAM",
-# let the fun begin!
-for seq in bootloaderseqs:
-	if(seq.address <= 0x40000):
-		addr = seq.address
-	else:
-		continue
-	#print "RAMing", len(seq.data), "bytes at address", hex(addr)
-	bootromWRITE(addr, len(seq.data), seq.data)
-	tty.flush()
-	sys.stdout.write(".")
-	sys.stdout.flush()
-print
+	print "Transfering pkernel program to IRAM",
+	# let the fun begin!
+	for seq in bootloaderseqs:
+		if(seq.address <= 0x40000):
+			addr = seq.address
+		else:
+			continue
+		#print "RAMing", len(seq.data), "bytes at address", hex(addr)
+		bootromWRITE(addr, len(seq.data), seq.data)
+		tty.flush()
+		sys.stdout.write(".")
+		sys.stdout.flush()
+	print
 
-# execute our pkernel finally and set pkernel conform baudrate
-bootromCALL(0x30000)
-time.sleep(0.1) # just to get sure that the pkernel is really running!
-del tty
-tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
+	# execute our pkernel finally and set pkernel conform baudrate
+	bootromCALL(0x30000)
+	time.sleep(0.1) # just to get sure that the pkernel is really running!
+	del tty
+	tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
 
-print "Performing ChipErase..."
-pkernCHIPERASE()
+	print "Performing ChipErase..."
+	pkernCHIPERASE()
 
-print "Flashing",
-for seq in pkernelseqs:
-	# skip seqs only consisting of 0xffs
-	seqset = list(set(seq.data))
-	if len(seqset) == 1 and seqset[0] == 0xff:
-		continue
-	#print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
-	pkernWRITE(seq.address, len(seq.data), seq.data)
-	tty.flush()
-	sys.stdout.write(".")
-	sys.stdout.flush()
-print
+	print "Flashing",
+	for seq in pkernelseqs:
+		# skip seqs only consisting of 0xffs
+		seqset = list(set(seq.data))
+		if len(seqset) == 1 and seqset[0] == 0xff:
+			continue
+		#print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
+		pkernWRITE(seq.address, len(seq.data), seq.data)
+		tty.flush()
+		sys.stdout.write(".")
+		sys.stdout.flush()
+	print
 
-duration = time.time() - starttime
-print "Procedure complete, took", round(duration, 2), "seconds."
+	duration = time.time() - starttime
+	print "Procedure complete, took", round(duration, 2), "seconds."
 
-sendByte(0x97) # exit and restart
-print "Program was started. Have fun!"
+	sendByte(0x97) # exit and restart
+	print "Program was started. Have fun!"
+
+
+if __name__ == '__main__':
+	sys.exit(main())
