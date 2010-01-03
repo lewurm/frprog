@@ -199,6 +199,7 @@ def main(argv=None):
 		return 1
 
 	print "Initializing serial port..."
+	global tty
 	tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
 
 	print "Please press RESET on your board..."
