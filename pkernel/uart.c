@@ -3,7 +3,10 @@
 void InitUart4(void)
 {
 	// Initialize UART asynchronous mode
-	BGR04 = 138; // 115200 Baud @ 16MHz
+	//BGR04 = 138; // 115200 Baud @ 16MHz
+	//BGR04 = 63; //  250000 Baud @ 16MHz
+	//BGR04 = 31; //  500000 Baud @ 16MHz
+	BGR04 = 15; // 1000000 Baud @ 16MHz
 	SCR04 = 0x17; // 8N1
 	SMR04 = 0x0d; // enable SOT3, Reset, normal mode
 	SSR04 = 0x00; // LSB first

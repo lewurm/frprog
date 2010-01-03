@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-import sys, time
-from SerialPort_linux import *
+import sys, time, pyftdi
 
 # serial device to communicate with
-DEVICE="/dev/ttyUSB0"
+DEVICE1=0x0403
+DEVICE2=0x6001
 # baudrate used for initialization
 INIT_BAUDRATE=9600
 # baudrate used for communication with the internal bootloader after init
 BOOTLOADER_BAUDRATE=38400
 # baudrate used for communication with the pkernel program that does the flashing eventually
-KERNEL_BAUDRATE=115200
+KERNEL_BAUDRATE=1000000
 
 # contains the last received checksum from a READ, WRITE or CHECKSUM command
 last_checksum = 0
@@ -20,7 +20,7 @@ class FlashSequence(object):
 		self.data = data
 
 def sendByte(byte):
-	tty.write(chr(byte))
+	tty.write_data(chr(byte))
 
 def sendWord(word):
 	sendByte(word & 0xFF)
@@ -33,7 +33,10 @@ def sendDWord(dword):
 	sendByte((dword >> 24) & 0xFF)
 
 def recvByte():
-	return ord(tty.read())
+	bla = tty.read_data(1)
+	while(len(bla) < 1):
+		bla = tty.read_data(1)
+	return ord(bla)
 
 def recvChecksum():
 	global last_checksum
@@ -200,17 +203,20 @@ def main(argv=None):
 
 	print "Initializing serial port..."
 	global tty
-	tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
+	tty = pyftdi.FTDI()
+	tty.usb_open(DEVICE1, DEVICE2)
+	tty.set_baudrate(INIT_BAUDRATE)
+	#tty.set_latency_timer(100)
+	#print "latency:", tty.get_latency_timer()
 
 	print "Please press RESET on your board..."
 
 	while True:
-		tty.write('V')
-		tty.flush()
+		tty.write_data('V')
 		try:
-			if tty.read() == 'F':
+			if tty.read_data(1) == 'F':
 				break
-		except SerialPortException:
+		except Exception: # hm... thats not true atm :/ no timeout here i think
 			# timeout happened, who cares ;-)
 			pass
 
@@ -221,7 +227,9 @@ def main(argv=None):
 	bootromBAUDRATE(BOOTLOADER_BAUDRATE)
 	time.sleep(0.1) # just to get sure that the bootloader is really running in new baudrate mode!
 	del tty
-	tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
+	tty = pyftdi.FTDI()
+	tty.usb_open(DEVICE1, DEVICE2)
+	tty.set_baudrate(BOOTLOADER_BAUDRATE)
 
 	print "Transfering pkernel program to IRAM",
 	# let the fun begin!
@@ -232,7 +240,6 @@ def main(argv=None):
 			continue
 		#print "RAMing", len(seq.data), "bytes at address", hex(addr)
 		bootromWRITE(addr, len(seq.data), seq.data)
-		tty.flush()
 		sys.stdout.write(".")
 		sys.stdout.flush()
 	print
@@ -241,7 +248,9 @@ def main(argv=None):
 	bootromCALL(0x30000)
 	time.sleep(0.1) # just to get sure that the pkernel is really running!
 	del tty
-	tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
+	tty = pyftdi.FTDI()
+	tty.usb_open(DEVICE1, DEVICE2)
+	tty.set_baudrate(KERNEL_BAUDRATE)
 
 	print "Performing ChipErase..."
 	pkernCHIPERASE()
@@ -254,7 +263,6 @@ def main(argv=None):
 			continue
 		#print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
 		pkernWRITE(seq.address, len(seq.data), seq.data)
-		tty.flush()
 		sys.stdout.write(".")
 		sys.stdout.flush()
 	print
