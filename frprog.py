@@ -2,8 +2,6 @@
 import sys, time
 from SerialPort_linux import *
 
-# serial device to communicate with
-DEVICE="/dev/ttyUSB0"
 # baudrate used for initialization
 INIT_BAUDRATE=9600
 # baudrate used for communication with the internal bootloader after init
@@ -183,9 +181,14 @@ def main(argv=None):
 	# check command line arguments
 	if argv is None:
 		argv = sys.argv
-	if len(argv) != 2:
-		print "Usage: " + argv[0] + " [target mhx-file]"
+	if len(argv) != 2 and len(argv) != 4:
+		print "Usage: " + argv[0] + " <target mhx-file> [-d DEVICE]"
 		return 1
+
+	# standard serial device to communicate with
+	DEVICE="/dev/ttyUSB0"
+	if len(argv) == 4:
+		DEVICE = argv[3]
 
 	# read in data from mhx-files before starting
 	try:
