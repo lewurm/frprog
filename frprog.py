@@ -177,6 +177,9 @@ def readMHXFile(filename): # desired mhx filename
 	fp.close()
 	return retval
 
+def usage(execfile):
+	print "Usage: " + execfile + " <target mhx-file> [-d DEVICE]"
+
 def main(argv=None):
 	# check command line arguments
 	if argv is None:
@@ -187,13 +190,19 @@ def main(argv=None):
 		return 0
 
 	if len(argv) != 2 and len(argv) != 4:
-		print "Usage: " + argv[0] + " <target mhx-file> [-d DEVICE]"
+		usage(argv[0])
 		return 1
 
 	# standard serial device to communicate with
 	DEVICE="/dev/ttyUSB0"
+
+	# overrule standard device if provided with -d
 	if len(argv) == 4:
-		DEVICE = argv[3]
+		if argv[2] == "-d":
+			DEVICE = argv[3]
+		else:
+			usage(argv[0])
+			return 1
 
 	# read in data from mhx-files before starting
 	try:
