@@ -181,6 +181,11 @@ def main(argv=None):
 	# check command line arguments
 	if argv is None:
 		argv = sys.argv
+
+	if len(argv) == 2 and (argv[1] == "-v" or argv[1] == "--version"):
+		print "Version: %VERSION%"
+		return 0
+
 	if len(argv) != 2 and len(argv) != 4:
 		print "Usage: " + argv[0] + " <target mhx-file> [-d DEVICE]"
 		return 1

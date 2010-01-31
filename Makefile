@@ -5,7 +5,7 @@ all:
 
 #install: all #this just work when $FUJDEV is set for root too, eh?
 install:
-	sed -e 's/%PREFIX%/\$(PREFIX)/g' frprog.py > $(PREFIX)/bin/frprog
+	sed -e 's/%PREFIX%/\$(PREFIX)/g' frprog.py | sed -e 's/%VERSION%/$(shell git describe --abbrev=6)/g'> $(PREFIX)/bin/frprog
 	cp SerialPort_linux.pyc $(PREFIX)/bin/SerialPort_linux.pyc
 	mkdir -p $(PREFIX)/share/frprog/
 	cp pkernel/pkernel.mhx $(PREFIX)/share/frprog/pkernel.mhx
