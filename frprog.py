@@ -235,7 +235,11 @@ def main(argv=None):
 
 	print "OK, trying to set baudrate..."
 	# set baudrate
-	bootromBAUDRATE(BOOTLOADER_BAUDRATE)
+	try:
+		bootromBAUDRATE(BOOTLOADER_BAUDRATE)
+	except SerialPortException:
+		print "timeout exception: try again ->"
+		bootromBAUDRATE(BOOTLOADER_BAUDRATE)
 	time.sleep(0.1) # just to get sure that the bootloader is really running in new baudrate mode!
 	del tty
 	tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
