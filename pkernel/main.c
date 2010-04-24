@@ -4,9 +4,24 @@
 #define BUFSIZE 0x20
 #define cleardata() memset(data,0,BUFSIZE)
 
-static void increaseled(void)
+void increaseled(void)
 {
-	PDR14 = ~(((~PDR14)+1)%256);
+#define T_INIT 1100
+	static unsigned int t = T_INIT;
+	static unsigned char l = (1<<0);
+	static unsigned char s = 1;
+	if(t == 0) {
+		if(l & (1<<0)) {
+			s = 1;
+		} else if (l & (1<<7)) {
+			s = 0;
+		}
+		l = s ? l << 1 : l >> 1;
+		PDR14 = ~l;
+		t = T_INIT;
+	} else {
+		t--;
+	}
 }
 
 static unsigned char recvbyte(void)
@@ -68,7 +83,7 @@ void main(void)
 		switch(recvbyte()) {
 			case 0x15: //chip erase
 				Putch4(0x45);
-				increaseled();
+				PDR14 = ~(0x05);
 				if(FLASH_ChipErase() != 1) {
 					panic();
 				}
@@ -85,13 +100,11 @@ void main(void)
 				size = recvword();
 				increaseled();
 
-				PDR14 = 0xff;
 				for(i=0; i<size; i++) { /* get data */
 					increaseled();
 					data[i] = recvbyte();
 				}
 
-				PDR14 = 0xff;
 				for(i=0; i<size; i+=2) { /* flash the data */
 					increaseled();
 					next = (((unsigned short)data[i])<<8) | (unsigned short)data[i+1];
@@ -104,6 +117,9 @@ void main(void)
 
 			case 0x97: /* exit and restart (let do this by the watchdog!) */
 				while(1) {
+					unsigned long tmp = 1800;
+					while(tmp)
+						tmp = tmp - 1;
 					increaseled();
 				}
 
