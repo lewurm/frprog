@@ -244,6 +244,8 @@ def main(argv=None):
 	del tty
 	tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
 
+	SPLIT = 30
+	s = SPLIT
 	print "Transfering pkernel program to IRAM",
 	# let the fun begin!
 	for seq in bootloaderseqs:
@@ -254,8 +256,12 @@ def main(argv=None):
 		#print "RAMing", len(seq.data), "bytes at address", hex(addr)
 		bootromWRITE(addr, len(seq.data), seq.data)
 		tty.flush()
-		sys.stdout.write(".")
-		sys.stdout.flush()
+
+		s = s - 1
+		if s == 0:
+			sys.stdout.write(".")
+			sys.stdout.flush()
+			s = SPLIT
 	print
 
 	# execute our pkernel finally and set pkernel conform baudrate
@@ -267,6 +273,7 @@ def main(argv=None):
 	print "Performing ChipErase..."
 	pkernCHIPERASE()
 
+	s = SPLIT
 	print "Flashing",
 	for seq in pkernelseqs:
 		# skip seqs only consisting of 0xffs
@@ -276,8 +283,12 @@ def main(argv=None):
 		#print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
 		pkernWRITE(seq.address, len(seq.data), seq.data)
 		tty.flush()
-		sys.stdout.write(".")
-		sys.stdout.flush()
+
+		s = s - 1
+		if s == 0:
+			sys.stdout.write(".")
+			sys.stdout.flush()
+			s = SPLIT
 	print
 
 	duration = time.time() - starttime
