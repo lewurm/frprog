@@ -1,159 +1,208 @@
 #!/usr/bin/env python
+"""
+This file realize a simple programmer, which communicates with our "pkernel"
+firmware.
+"""
 import sys, time
-from SerialPort_linux import *
+from SerialPort_linux import SerialPort, SerialPortException
 
 # baudrate used for initialization
-INIT_BAUDRATE=9600
+INIT_BAUDRATE = 9600
 # baudrate used for communication with the internal bootloader after init
-BOOTLOADER_BAUDRATE=38400
-# baudrate used for communication with the pkernel program that does the flashing eventually
-KERNEL_BAUDRATE=115200
+BOOTLOADER_BAUDRATE = 38400
+# baudrate used for communication with the pkernel program that does the
+# flashing eventually
+KERNEL_BAUDRATE = 115200
+# constant for output
+SPLIT = 30
 
 # contains the last received checksum from a READ, WRITE or CHECKSUM command
-last_checksum = 0
+lastchecksum = 0
 
 class FlashSequence(object):
 	def __init__(self, address, data):
 		self.address = address
 		self.data = data
 
-def sendByte(byte):
+def sendbyte(byte):
+	"""
+	send a byte to the TTY-device
+	"""
 	tty.write(chr(byte))
 
-def sendWord(word):
-	sendByte(word & 0xFF)
-	sendByte((word >> 8) & 0xFF)
+def sendword(word):
+	"""
+	send a word to the TTY-device
+	"""
+	sendbyte(word & 0xFF)
+	sendbyte((word >> 8) & 0xFF)
 
-def sendDWord(dword):
-	sendByte(dword & 0xFF)
-	sendByte((dword >> 8) & 0xFF)
-	sendByte((dword >> 16) & 0xFF)
-	sendByte((dword >> 24) & 0xFF)
+def senddword(dword):
+	"""
+	send a dword to the TTY-device
+	"""
+	sendbyte(dword & 0xFF)
+	sendbyte((dword >> 8) & 0xFF)
+	sendbyte((dword >> 16) & 0xFF)
+	sendbyte((dword >> 24) & 0xFF)
 
-def recvByte():
+def recvbyte():
+	"""
+	receive a byte from the TTY-device
+	"""
 	return ord(tty.read())
 
-def recvChecksum():
-	global last_checksum
-	last_checksum = recvByte()
-	last_checksum |= (recvByte() << 8)
+def recvchecksum():
+	"""
+	receive checksum from the bootROM firmware
+	"""
+	global lastchecksum
+	lastchecksum = recvbyte()
+	lastchecksum |= (recvbyte() << 8)
 
-def bootromREAD(address, size):
+def bootromread(address, size):
+	"""
+	send a READ-command to the bootROM-firmware
+	"""
 	# send READ command
-	sendByte(0x01)
-	if (recvByte() != 0xF1):
+	sendbyte(0x01)
+	if (recvbyte() != 0xF1):
 		raise Exception
-	sendByte(0x02)
-	if (recvByte() != 0x82):
+	sendbyte(0x02)
+	if (recvbyte() != 0x82):
 		raise Exception
 	# tell desired address and size
-	sendDWord(address)
-	sendWord(size)
+	senddword(address)
+	sendword(size)
 	# get binary stream of data
 	data = []
-	for i in range(0, size):
-		data.append(recvByte())
+	for _ in range(0, size):
+		data.append(recvbyte())
 	# get checksum
-	recvChecksum()
+	recvchecksum()
 	return data
 
-def bootromWRITE(address, size, data):
+def bootromwrite(address, size, data):
+	"""
+	send a WRITE-command to the bootROM-firmware
+	"""
 	# send WRITE command
-	sendByte(0x01)
-	if (recvByte() != 0xF1):
+	sendbyte(0x01)
+	if (recvbyte() != 0xF1):
 		raise Exception
-	sendByte(0x03)
-	if (recvByte() != 0x83):
+	sendbyte(0x03)
+	if (recvbyte() != 0x83):
 		raise Exception
 	# tell desired address and size
-	sendDWord(address)
-	sendWord(size)
+	senddword(address)
+	sendword(size)
 	# write binary stream of data
 	for i in range(0, size):
-		sendByte(data[i])
+		sendbyte(data[i])
 	# get checksum
-	recvChecksum()
+	recvchecksum()
 
-# TODO: test this function!
-def bootromCALL(address):
+def bootromcall(address):
+	"""
+	send a CALL-command to the bootROM-firmware
+	"""
 	# send CALL command
-	sendByte(0x01)
-	if (recvByte() != 0xF1):
+	sendbyte(0x01)
+	if (recvbyte() != 0xF1):
 		raise Exception
-	sendByte(0x04)
-	if (recvByte() != 0x84):
+	sendbyte(0x04)
+	if (recvbyte() != 0x84):
 		raise Exception
 	# tell desired address
-	sendDWord(address)
+	senddword(address)
 	# wait for return parameter - not needed here!
-	#return recvByte()
+	#return recvbyte()
 
 # TODO: test this function!
-def bootromCHECKSUM():
+def bootromchecksum():
+	"""
+	send a CHECKSUM-command to the bootROM-firmware
+	"""
 	# call CHECKSUM command
-	sendByte(0x01)
-	if (recvByte() != 0xF1):
+	sendbyte(0x01)
+	if (recvbyte() != 0xF1):
 		raise Exception
-	sendByte(0x05)
-	if (recvByte() != 0x84):
+	sendbyte(0x05)
+	if (recvbyte() != 0x84):
 		raise Exception
 	# get checksum
-	recvChecksum()
+	recvchecksum()
 
-def bootromBAUDRATE(baudrate):
+def bootrombaudrate(baudrate):
+	"""
+	send a BAUDRAME-command to the bootROM-firmware
+	"""
 	# send BAUDRATE command
-	sendByte(0x01)
-	if (recvByte() != 0xF1):
+	sendbyte(0x01)
+	if (recvbyte() != 0xF1):
 		raise Exception
-	sendByte(0x06)
-	if (recvByte() != 0x86):
+	sendbyte(0x06)
+	if (recvbyte() != 0x86):
 		raise Exception
 	# send desired baudrate
-	sendDWord(baudrate)
+	senddword(baudrate)
 
-def pkernCHIPERASE():
-	sendByte(0x15)
-	if (recvByte() != 0x45):
+def pkernchiperase():
+	"""
+	send a CHIPERASE-command to the pkernel-firmware
+	"""
+	sendbyte(0x15)
+	if (recvbyte() != 0x45):
 		raise Exception
 	# wait till completion...
-	if (recvByte() != 0x23):
+	if (recvbyte() != 0x23):
 		raise Exception
 
-def pkernERASE(address, size):
-	sendByte(0x12)
-	if (recvByte() != 0x11):
+def pkernerase(address, size):
+	"""
+	send a ERASE-command to the pkernel-firmware
+	"""
+	sendbyte(0x12)
+	if (recvbyte() != 0x11):
 		raise Exception
-	sendDWord(address)
-	sendWord(size)
-	if (recvByte() != 0x18):
+	senddword(address)
+	sendword(size)
+	if (recvbyte() != 0x18):
 		raise Exception
 
-def pkernWRITE(address, size, data):
+def pkernwrite(address, size, data):
+	"""
+	send a WRITE-command to the pkernel-firmware
+	"""
 	# send WRITE command
-	sendByte(0x13)
-	if (recvByte() != 0x37):
+	sendbyte(0x13)
+	if (recvbyte() != 0x37):
 		raise Exception
 	# tell desired address and size
-	sendDWord(address)
-	sendWord(size)
+	senddword(address)
+	sendword(size)
 
 	# write binary stream of data
 	for i in range(0, size):
-		sendByte(data[i])
+		sendbyte(data[i])
 
-	if (recvByte() != 0x28):
+	if (recvbyte() != 0x28):
 		raise Exception
 
-def readMHXFile(filename): # desired mhx filename
-	fp = open(filename, "r")
+def readmhxfile(filename): # desired mhx filename
+	"""
+	proceeds a MHX-File
+	"""
+	filep = open(filename, "r")
 	retval = [] # returns a list of FlashSequence objects
 	linecount = 0
-	for line in fp:
+	for line in filep:
 		linecount += 1
 		# get rid of newline characters
 		line = line.strip()
 
-		# we're only interested in S2 (data sequence with 3 address bytes) records by now
+		# we're only interested in S2 (data sequence with 3 address bytes)
+		# records by now
 		if line[0:2] == "S2":
 			byte_count = int(line[2:4], 16)
 			# just to get sure, check if byte count field is valid
@@ -174,13 +223,19 @@ def readMHXFile(filename): # desired mhx filename
 
 			# add flash sequence to our list
 			retval.append(FlashSequence(address, data))
-	fp.close()
+	filep.close()
 	return retval
 
-def usage(execfile):
-	print "Usage: " + execfile + " <target mhx-file> [-d DEVICE]"
+def usage(execf):
+	"""
+	print usage of frprog
+	"""
+	print "Usage: " + execf + " <target mhx-file> [-d DEVICE]"
 
 def main(argv=None):
+	"""
+	main function of frprog
+	"""
 	# check command line arguments
 	if argv is None:
 		argv = sys.argv
@@ -194,12 +249,12 @@ def main(argv=None):
 		return 1
 
 	# standard serial device to communicate with
-	DEVICE="/dev/ttyUSB0"
+	device = "/dev/ttyUSB0"
 
 	# overrule standard device if provided with -d
 	if len(argv) == 4:
 		if argv[2] == "-d":
-			DEVICE = argv[3]
+			device = argv[3]
 		else:
 			usage(argv[0])
 			return 1
@@ -207,17 +262,17 @@ def main(argv=None):
 	# read in data from mhx-files before starting
 	try:
 		try:
-			bootloaderseqs = readMHXFile("pkernel/pkernel.mhx")
-		except IOError as error1:
-			bootloaderseqs = readMHXFile("%PREFIX%/share/frprog/pkernel.mhx")
-		pkernelseqs = readMHXFile(argv[1])
+			bootloaderseqs = readmhxfile("pkernel/pkernel.mhx")
+		except IOError as _:
+			bootloaderseqs = readmhxfile("%PREFIX%/share/frprog/pkernel.mhx")
+		pkernelseqs = readmhxfile(argv[1])
 	except IOError as error:
 		print argv[0] + ": Error - couldn't open file " + error.filename + "!"
 		return 1
 
 	print "Initializing serial port..."
 	global tty
-	tty = SerialPort(DEVICE, 100, INIT_BAUDRATE)
+	tty = SerialPort(device, 100, INIT_BAUDRATE)
 
 	print "Please press RESET on your board..."
 
@@ -231,21 +286,22 @@ def main(argv=None):
 			# timeout happened, who cares ;-)
 			pass
 
-	starttime = time.time() # save time at this point for evaluating the duration at the end
+	# save time at this point for evaluating the duration at the end
+	starttime = time.time()
 
 	print "OK, trying to set baudrate..."
 	# set baudrate
 	try:
-		bootromBAUDRATE(BOOTLOADER_BAUDRATE)
+		bootrombaudrate(BOOTLOADER_BAUDRATE)
 	except SerialPortException:
 		print "timeout exception: try again ->"
-		bootromBAUDRATE(BOOTLOADER_BAUDRATE)
-	time.sleep(0.1) # just to get sure that the bootloader is really running in new baudrate mode!
+		bootrombaudrate(BOOTLOADER_BAUDRATE)
+	# just to get sure that the bootloader is really running in new baudrate mode!
+	time.sleep(0.1)
 	del tty
-	tty = SerialPort(DEVICE, 100, BOOTLOADER_BAUDRATE)
+	tty = SerialPort(device, 100, BOOTLOADER_BAUDRATE)
 
-	SPLIT = 30
-	s = SPLIT
+	sdots = SPLIT
 	print "Transfering pkernel program to IRAM",
 	# let the fun begin!
 	for seq in bootloaderseqs:
@@ -254,26 +310,26 @@ def main(argv=None):
 		else:
 			continue
 		#print "RAMing", len(seq.data), "bytes at address", hex(addr)
-		bootromWRITE(addr, len(seq.data), seq.data)
+		bootromwrite(addr, len(seq.data), seq.data)
 		tty.flush()
 
-		s = s - 1
-		if s == 0:
+		sdots = sdots - 1
+		if sdots == 0:
 			sys.stdout.write(".")
 			sys.stdout.flush()
-			s = SPLIT
+			sdots = SPLIT
 	print
 
 	# execute our pkernel finally and set pkernel conform baudrate
-	bootromCALL(0x30000)
+	bootromcall(0x30000)
 	time.sleep(0.1) # just to get sure that the pkernel is really running!
 	del tty
-	tty = SerialPort(DEVICE, None, KERNEL_BAUDRATE)
+	tty = SerialPort(device, None, KERNEL_BAUDRATE)
 
 	print "Performing ChipErase..."
-	pkernCHIPERASE()
+	pkernchiperase()
 
-	s = SPLIT
+	sdots = SPLIT
 	print "Flashing",
 	for seq in pkernelseqs:
 		# skip seqs only consisting of 0xffs
@@ -281,20 +337,20 @@ def main(argv=None):
 		if len(seqset) == 1 and seqset[0] == 0xff:
 			continue
 		#print "Flashing", len(seq.data), "bytes at address", hex(seq.address)
-		pkernWRITE(seq.address, len(seq.data), seq.data)
+		pkernwrite(seq.address, len(seq.data), seq.data)
 		tty.flush()
 
-		s = s - 1
-		if s == 0:
+		sdots = sdots - 1
+		if sdots == 0:
 			sys.stdout.write(".")
 			sys.stdout.flush()
-			s = SPLIT
+			sdots = SPLIT
 	print
 
 	duration = time.time() - starttime
 	print "Procedure complete, took", round(duration, 2), "seconds."
 
-	sendByte(0x97) # exit and restart
+	sendbyte(0x97) # exit and restart
 	print "Program was started. Have fun!"
 
 

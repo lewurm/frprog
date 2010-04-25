@@ -18,4 +18,7 @@ uninstall:
 	rm $(PREFIX)/bin/frprog
 	rm $(PREFIX)/bin/SerialPort_linux.pyc
 
+pylint: frprog.py
+	pylint --indent-string="\t" $<
+
 .PHONY: uninstall
