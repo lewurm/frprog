@@ -19,7 +19,7 @@ CPUT = -cpu MB91F465X
 CFLAGS = -w 1 -O 4 -B -K SPEED -K LONGADDRESS
 CFLAGS += -K SCHEDULE -K A1 -K SARG -Xdof
 CFLAGS += -K EOPT -K LIB -K UNROLL -Xalign
-CFLAGS += -c -cwno $(CPUT)
+CFLAGS += -c -Xcwno $(CPUT)
 
 ASFLAGS = -w 2 -O 0 -linf ON -lsrc ON -lsec ON
 ASFLAGS += -lcros OFF -linc ON -lexp OBJ -pl 60
@@ -55,6 +55,12 @@ LD = $(PREFIX)flnk911s
 LIBR = $(PREFIX)flibs
 CONV = $(PREFIX)f2ms
 
+ifneq ($(shell which dos2unix),)
+D2U = dos2unix
+else
+D2U = fromdos
+endif
+
 all: $(TARGET_MHX)
 
 upload: $(TARGET_MHX)
@@ -72,7 +78,7 @@ $(TARGET): $(OBJS)
 	@echo "  COMPILE   $<"
 	@mkdir -p $(DEPDIR)
 	@echo -n "$@: " > $(DEPDIR)/$<.d
-	@$(CC) -H $(CPUT) $< | dos2unix | paste -s -d " " >> $(DEPDIR)/$<.d
+	@$(CC) -H $(CPUT) $< | $(D2U) | paste -s -d " " >> $(DEPDIR)/$<.d
 	@$(CC) $(CFLAGS) $(DEFINES) $< -o $@
 
 %.obj: %.asm
