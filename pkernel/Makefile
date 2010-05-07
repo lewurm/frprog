@@ -55,7 +55,7 @@ LD = $(PREFIX)flnk911s
 LIBR = $(PREFIX)flibs
 CONV = $(PREFIX)f2ms
 
-ifneq ($(shell which dos2unix),)
+ifeq ($(shell which fromdos > /dev/null 2> /dev/null; echo $$?),1)
 D2U = dos2unix
 else
 D2U = fromdos

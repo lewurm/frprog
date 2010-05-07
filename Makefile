@@ -1,11 +1,17 @@
 PREFIX = /usr
 
+ifeq ($(shell which git > /dev/null 2> /dev/null; echo $$?),0)
+VERSION = $(shell git describe --abbrev=6)
+else
+VERSION = v0.1-XXX
+endif
+
 all:
 	make -C pkernel/
 
 #install: all #this just work when $FUJDEV is set for root too, eh?
 install:
-	sed -e 's/%PREFIX%/\$(PREFIX)/g' frprog.py | sed -e 's/%VERSION%/$(shell git describe --abbrev=6)/g'> $(PREFIX)/bin/frprog
+	sed -e 's/%PREFIX%/\$(PREFIX)/g' frprog.py | sed -e 's/%VERSION%/$(VERSION)/g'> $(PREFIX)/bin/frprog
 	cp SerialPort_linux.py $(PREFIX)/bin/SerialPort_linux.py
 	mkdir -p $(PREFIX)/share/frprog/
 	cp pkernel/pkernel.mhx $(PREFIX)/share/frprog/pkernel.mhx
